@@ -1,0 +1,370 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-scanning-config
+  namespace: ares-cicd
+data:
+  trivy-config.yaml: |
+    # Trivy security scanner configuration
+    cache:
+      dir: /tmp/trivy-cache
+    db:
+      skip-update: false
+      download-db-only: false
+    scan:
+      security-checks: "vuln,config,secret"
+      severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+      ignore-unfixed: false
+      skip-files: []
+      skip-dirs: []
+    format: "json"
+    output: "/tmp/trivy-results.json"
+    
+    # ARES-specific scanning rules
+    ares:
+      quantum_security_checks: true
+      temporal_integrity_checks: true
+      enterprise_compliance_checks: true
+      
+  semgrep-config.yaml: |
+    # Semgrep security rules configuration
+    rules:
+      - p/security-audit
+      - p/rust
+      - p/secrets
+      - p/owasp-top-ten
+      - p/kubernetes
+    
+    exclude:
+      - "target/"
+      - "*.git"
+      - "test_fixtures/"
+    
+    # Custom ARES rules
+    custom_rules:
+      - rules/ares-quantum-security.yaml
+      - rules/ares-temporal-security.yaml
+      - rules/ares-enterprise-compliance.yaml
+    
+    output:
+      format: "sarif"
+      file: "/tmp/semgrep-results.sarif"
+      
+  sonarqube-config.properties: |
+    # SonarQube configuration for ARES ChronoFabric
+    sonar.projectKey=ares-chronofabric
+    sonar.projectName=ARES ChronoFabric
+    sonar.projectVersion=1.0.0
+    
+    sonar.sources=crates
+    sonar.tests=crates
+    sonar.test.inclusions=**/*test*.rs,**/tests/**/*.rs
+    sonar.exclusions=target/**/*,**/target/**/*
+    
+    # Language specific settings
+    sonar.rust.clippy.reportPaths=target/clippy-report.json
+    sonar.rust.coverage.reportPaths=target/tarpaulin-report.xml
+    
+    # Security scanning
+    sonar.security.hotspots.inherit=SECURITY_HOTSPOT
+    sonar.security.review.category=SECURITY_REVIEW
+    
+    # Quality gates
+    sonar.qualitygate.wait=true
+    sonar.qualitygate.timeout=300
+    
+    # ARES-specific quality metrics
+    sonar.ares.quantum.security.threshold=95
+    sonar.ares.temporal.integrity.threshold=98
+    sonar.ares.enterprise.compliance.threshold=99
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: security-scanning-secrets
+  namespace: ares-cicd
+type: Opaque
+data:
+  SONAR_TOKEN: ""  # Base64 encoded SonarQube token
+  SNYK_TOKEN: ""   # Base64 encoded Snyk token
+  GITHUB_TOKEN: "" # Base64 encoded GitHub token
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-security-scan
+  namespace: ares-cicd
+  labels:
+    app: security-scanner
+    component: daily-scan
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+  timezone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: security-scanner
+            scan-type: daily
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: security-scanner
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+          - name: security-scanner
+            image: ares/security-scanner:latest
+            env:
+            - name: SCAN_TYPE
+              value: "comprehensive"
+            - name: QUANTUM_SECURITY_ENABLED
+              value: "true"
+            - name: TEMPORAL_SECURITY_ENABLED
+              value: "true"
+            - name: ENTERPRISE_COMPLIANCE_ENABLED
+              value: "true"
+            envFrom:
+            - secretRef:
+                name: security-scanning-secrets
+            resources:
+              requests:
+                memory: 1Gi
+                cpu: 500m
+              limits:
+                memory: 2Gi
+                cpu: 1
+            volumeMounts:
+            - name: scan-config
+              mountPath: /etc/security-config
+            - name: scan-results
+              mountPath: /tmp/scan-results
+            - name: source-code
+              mountPath: /workspace
+              readOnly: true
+            command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              set -euo pipefail
+              echo "Starting comprehensive security scan..."
+              
+              cd /workspace
+              
+              # Run Trivy scan
+              trivy config --config /etc/security-config/trivy-config.yaml .
+              
+              # Run Semgrep scan
+              semgrep --config /etc/security-config/semgrep-config.yaml .
+              
+              # Run custom ARES security validations
+              ./scripts/enterprise_security_validation.sh
+              
+              # Run quantum security validation
+              ./scripts/validate_quantum_security.sh
+              
+              # Run temporal security validation  
+              ./scripts/validate_temporal_security.sh
+              
+              # Generate consolidated report
+              ./scripts/generate_security_report.sh
+              
+              echo "Security scan completed successfully"
+          volumes:
+          - name: scan-config
+            configMap:
+              name: security-scanning-config
+          - name: scan-results
+            persistentVolumeClaim:
+              claimName: security-scan-results
+          - name: source-code
+            persistentVolumeClaim:
+              claimName: source-code-snapshot
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: security-scan-results
+  namespace: ares-cicd
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: source-code-snapshot
+  namespace: ares-cicd
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: security-scanner
+  namespace: ares-cicd
+  labels:
+    app: security-scanner
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security-scanner
+  labels:
+    app: security-scanner
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["policy"]
+  resources: ["podsecuritypolicies"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: security-scanner
+  labels:
+    app: security-scanner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: security-scanner
+subjects:
+- kind: ServiceAccount
+  name: security-scanner
+  namespace: ares-cicd
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: security-scanner
+  namespace: ares-cicd
+  labels:
+    app: security-scanner
+spec:
+  selector:
+    matchLabels:
+      app: security-scanner
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-scanner-metrics
+  namespace: ares-cicd
+  labels:
+    app: security-scanner
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: security-scanner
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: security-scanning-alerts
+  namespace: ares-cicd
+  labels:
+    app: security-scanner
+spec:
+  groups:
+  - name: security-scanning.rules
+    rules:
+    - alert: SecurityScanFailed
+      expr: security_scan_failure_total > 0
+      for: 0m
+      labels:
+        severity: critical
+        component: security-scanner
+      annotations:
+        summary: "Security scan failed"
+        description: "Security scan failed with {{ $value }} failures"
+        
+    - alert: HighVulnerabilityCount
+      expr: security_vulnerabilities_high_total > 5
+      for: 5m
+      labels:
+        severity: warning
+        component: security-scanner
+      annotations:
+        summary: "High vulnerability count detected"
+        description: "{{ $value }} high-severity vulnerabilities detected"
+        
+    - alert: CriticalVulnerabilityDetected
+      expr: security_vulnerabilities_critical_total > 0
+      for: 0m
+      labels:
+        severity: critical
+        component: security-scanner
+      annotations:
+        summary: "Critical vulnerability detected"
+        description: "{{ $value }} critical vulnerabilities detected - immediate action required"
+        
+    - alert: QuantumSecurityViolation
+      expr: quantum_security_violations_total > 0
+      for: 0m
+      labels:
+        severity: critical
+        component: quantum-security
+      annotations:
+        summary: "Quantum security violation detected"
+        description: "Quantum security violation detected - quantum systems may be compromised"
+        
+    - alert: TemporalSecurityViolation
+      expr: temporal_security_violations_total > 0
+      for: 0m
+      labels:
+        severity: critical
+        component: temporal-security
+      annotations:
+        summary: "Temporal security violation detected"
+        description: "Temporal security violation detected - timeline integrity may be compromised"
+        
+    - alert: ComplianceViolation
+      expr: compliance_violations_total > 0
+      for: 1m
+      labels:
+        severity: warning
+        component: compliance
+      annotations:
+        summary: "Compliance violation detected"
+        description: "{{ $value }} compliance violations detected"

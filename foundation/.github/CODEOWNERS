@@ -1,0 +1,57 @@
+# CODEOWNERS for ARES CSF
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence, these owners will be requested
+# for review when someone opens a pull request.
+
+# Global owners
+* @ares-systems/csf-core
+
+# Documentation
+/docs/ @ares-systems/documentation
+*.md @ares-systems/documentation
+/README.md @ares-systems/csf-core @ares-systems/documentation
+
+# Core components
+/crates/csf-core/ @ares-systems/csf-core
+/crates/csf-kernel/ @ares-systems/kernel-team
+/crates/csf-bus/ @ares-systems/networking-team
+
+# C-LOGIC modules
+/crates/csf-clogic/src/drpp/ @ares-systems/drpp-team
+/crates/csf-clogic/src/adp/ @ares-systems/adp-team
+/crates/csf-clogic/src/egc/ @ares-systems/safety-team
+/crates/csf-clogic/src/ems/ @ares-systems/ems-team
+
+# Security components
+/crates/csf-sil/ @ares-systems/security-team
+/crates/csf-network/src/crypto/ @ares-systems/security-team
+*.key @ares-systems/security-team
+*.pem @ares-systems/security-team
+
+# Hardware acceleration
+/crates/csf-mlir/ @ares-systems/mlir-team
+/crates/csf-ffi/cuda/ @ares-systems/gpu-team
+*.cu @ares-systems/gpu-team
+*.cuh @ares-systems/gpu-team
+
+# Infrastructure
+/.github/ @ares-systems/devops
+/scripts/ @ares-systems/devops
+/deployments/ @ares-systems/devops
+/Dockerfile* @ares-systems/devops
+/k8s/ @ares-systems/devops
+*.yml @ares-systems/devops
+*.yaml @ares-systems/devops
+
+# Configuration
+/config/ @ares-systems/csf-core
+*.toml @ares-systems/csf-core
+
+# Testing
+/tests/ @ares-systems/qa-team
+/benches/ @ares-systems/performance-team
+
+# Build system
+/Cargo.toml @ares-systems/csf-core
+/Cargo.lock @ares-systems/csf-core
+/rust-toolchain.toml @ares-systems/csf-core

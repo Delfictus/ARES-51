@@ -1,0 +1,305 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: performance-profiling-config
+  namespace: observability
+data:
+  parca.yaml: |
+    object_storage:
+      bucket:
+        type: "FILESYSTEM"
+        config:
+          directory: "/var/lib/parca"
+    
+    scrape_configs:
+    - job_name: "ares-quantum-services"
+      scrape_interval: "10s"
+      scrape_timeout: "5s"
+      static_configs:
+      - targets:
+        - "ares-core:8080"
+        - "ares-time:8081" 
+        - "ares-enterprise:8082"
+      relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        regex: "([^:]+):.*"
+        replacement: "${1}"
+    
+    # Quantum-specific profiling configuration
+    quantum_profiling:
+      coherence_tracking: true
+      entanglement_monitoring: true
+      gate_profiling: true
+      temporal_correlation: true
+      femtosecond_precision: true
+    
+    # Performance thresholds
+    thresholds:
+      quantum_coherence_minimum: 0.95
+      gate_duration_warning_ns: 1000
+      temporal_drift_threshold_fs: 100
+      memory_usage_warning_mb: 1024
+      cpu_usage_warning_percent: 80
+    
+    # Enterprise features
+    enterprise:
+      audit_logging: true
+      role_based_access: true
+      encryption_at_rest: true
+      backup_retention_days: 90
+      
+  grafana-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "ARES Quantum Performance Profiling",
+        "tags": ["ares", "quantum", "performance"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Quantum Coherence Over Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "quantum_coherence_ratio",
+                "legendFormat": "Coherence Ratio"
+              }
+            ],
+            "yAxes": [
+              {
+                "min": 0,
+                "max": 1,
+                "unit": "percentunit"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Quantum Gate Performance",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, quantum_gate_duration_ns_bucket)",
+                "legendFormat": "95th Percentile Gate Duration"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Temporal Drift Analysis",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "temporal_drift_femtoseconds",
+                "legendFormat": "Temporal Drift (fs)"
+              }
+            ],
+            "thresholds": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow", 
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "CPU Flame Graph",
+            "type": "flamegraph",
+            "targets": [
+              {
+                "expr": "cpu_profile_samples",
+                "legendFormat": "CPU Usage"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Memory Usage by Component",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "memory_usage_bytes by (component)",
+                "legendFormat": "{{component}}"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Network I/O Performance",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "network_bytes_transmitted_total",
+                "legendFormat": "Bytes Transmitted"
+              },
+              {
+                "expr": "network_bytes_received_total", 
+                "legendFormat": "Bytes Received"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "10s"
+      }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parca
+  namespace: observability
+  labels:
+    app: parca
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: parca
+  template:
+    metadata:
+      labels:
+        app: parca
+    spec:
+      serviceAccountName: parca
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+      - name: parca
+        image: parca/parca:v0.21.0
+        ports:
+        - containerPort: 7070
+          name: http
+        args:
+        - "--config-path=/etc/parca/parca.yaml"
+        - "--log-level=info"
+        - "--cors-allowed-origins=*"
+        - "--enable-persistence"
+        - "--storage-path=/var/lib/parca"
+        env:
+        - name: PARCA_ENABLE_QUANTUM_PROFILING
+          value: "true"
+        - name: PARCA_QUANTUM_PRECISION_MODE
+          value: "femtosecond"
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 500m
+          limits:
+            memory: 2Gi
+            cpu: 1
+        volumeMounts:
+        - name: parca-config
+          mountPath: /etc/parca
+        - name: parca-data
+          mountPath: /var/lib/parca
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 7070
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 7070
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: parca-config
+        configMap:
+          name: performance-profiling-config
+          items:
+          - key: parca.yaml
+            path: parca.yaml
+      - name: parca-data
+        persistentVolumeClaim:
+          claimName: parca-data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: parca-data
+  namespace: observability
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: fast-ssd
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: parca
+  namespace: observability
+  labels:
+    app: parca
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7070
+    targetPort: 7070
+    name: http
+  selector:
+    app: parca
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: parca
+  namespace: observability
+  labels:
+    app: parca
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: parca
+  labels:
+    app: parca
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: parca
+  labels:
+    app: parca
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: parca
+subjects:
+- kind: ServiceAccount
+  name: parca
+  namespace: observability

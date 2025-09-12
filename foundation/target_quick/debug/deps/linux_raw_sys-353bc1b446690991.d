@@ -1,0 +1,11 @@
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/linux_raw_sys-353bc1b446690991.d: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/elf.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/errno.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/general.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/ioctl.rs
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/liblinux_raw_sys-353bc1b446690991.rlib: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/elf.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/errno.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/general.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/ioctl.rs
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/liblinux_raw_sys-353bc1b446690991.rmeta: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/elf.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/errno.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/general.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/ioctl.rs
+
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/lib.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/elf.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/errno.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/general.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linux-raw-sys-0.9.4/src/x86_64/ioctl.rs:

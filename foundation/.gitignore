@@ -1,0 +1,231 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+*.pdb
+*.rlib
+*.rmeta
+*.exe
+/benches/target/
+/examples/target/
+/tests/target/
+**/.cargo-ok
+**/cargo-timing.html
+flamegraph.svg
+perf.data*
+*.prof
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-*
+.fleet/
+.helix/
+.vim/
+.netrwhist
+tags
+TAGS
+.emacs.d/
+.elc
+.vs/
+.vimrc.local
+.nvimrc.local
+
+# Build artifacts
+/build/
+/dist/
+/out/
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# CUDA
+*.cubin
+*.ptx
+*.fatbin
+*.gpu
+
+# MLIR
+*.mlir.bc
+*.mlir.ll
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+.env
+.env.*
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.nox/
+*.egg-info/
+dist/
+build/
+*.whl
+# Note: uv.lock, poetry.lock, Pipfile.lock are typically committed for reproducible builds
+# Uncomment below if you prefer not to commit lock files:
+# uv.lock
+# poetry.lock
+# Pipfile.lock
+
+# Documentation
+/site/
+/docs/_build/
+*.pdf
+
+# Logs and databases
+*.log
+*.log.*
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+/data/
+/logs/
+*.trace
+*.out
+*.err
+
+# Security
+*.key
+*.pem
+*.pfx
+*.p12
+*.crt
+*.csr
+secrets/
+.secrets/
+.env.local
+.env.production
+.env.development
+.env.test
+auth.json
+credentials.json
+
+# OS files
+Thumbs.db
+.directory
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Icon?
+
+# Testing & Benchmarking
+/coverage/
+*.gcda
+*.gcno
+*.lcov
+/test-results/
+/bench-results/
+criterion-*
+*.criterion/
+llvm-cov/
+tarpaulin-report.html
+cobertura.xml
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+/tmp/
+/temp/
+*.pid
+*.lock
+*.backup
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+
+# Configuration overrides
+config/local.toml
+config/*.local.toml
+config/secrets.toml
+.config/local/
+override.toml
+local.toml
+
+# Deployment & Infrastructure
+/deploy/
+/k8s/secrets/
+terraform.tfstate*
+.terraform/
+*.tfplan
+*.tfvars.local
+.terraformrc
+terraform.rc
+.kube/config.local
+.docker/config.json
+
+# AI & Development Tools
+.claude/
+# Note: .continue/ and .devcontainer/ contain project files, so not ignored
+# .continue/
+# .devcontainer/
+.cursor/
+.copilot/
+.aider/
+.codeium/
+.github-copilot/
+.tabnine/
+# Note: agent-output/ contains project files, so not ignored
+# agent-output/
+
+# Container & Virtualization
+# .devcontainer/ - contains project configuration, not ignored
+.dev/
+docker-compose.override.yml
+docker-compose.local.yml
+.vagrant/
+.dockerignore.local
+
+# Node.js (if present)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.parcel-cache/
+.next/
+.nuxt/
+.yarn/
+package-lock.json
+yarn.lock
+
+# Performance & Profiling
+*.cpuprofile
+*.heapprofile
+.clinic/
+clinic-*/
+*.perf
+*.bench
+*.trace
+profile.txt
+mem.prof
+cpu.prof

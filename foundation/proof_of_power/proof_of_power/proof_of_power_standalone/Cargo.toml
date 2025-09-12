@@ -1,0 +1,9 @@
+[workspace]
+
+[package]
+name = "proof_of_power_standalone"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sha2 = "0.10.9"

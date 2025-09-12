@@ -1,0 +1,2 @@
+(dyn std::any::Any + std::marker::Send + std::marker::Sync + 'static)
+(dyn std::any::Any + std::marker::Send + std::marker::Sync + 'static): std::clone::Clone

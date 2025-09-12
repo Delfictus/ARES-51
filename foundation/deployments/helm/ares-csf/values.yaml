@@ -1,0 +1,282 @@
+# Default values for ares-csf
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Image configuration
+image:
+  repository: aressystems/csf
+  tag: ""  # Defaults to chart appVersion
+  pullPolicy: IfNotPresent
+
+# Deployment configuration
+replicaCount: 3
+
+# Update strategy
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    api:
+      port: 8080
+      targetPort: api
+    network:
+      port: 9000
+      targetPort: network
+    metrics:
+      port: 9090
+      targetPort: metrics
+  annotations: {}
+
+# External service (optional)
+externalService:
+  enabled: false
+  type: LoadBalancer
+  port: 80
+  annotations: {}
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: ares-csf.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: ares-csf-tls
+  #    hosts:
+  #      - ares-csf.example.com
+
+# Resource limits
+resources:
+  limits:
+    cpu: 4000m
+    memory: 8Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Node selector
+nodeSelector: {}
+  # node-type: compute-optimized
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - ares-csf
+        topologyKey: kubernetes.io/hostname
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  annotations: {}
+
+# CSF Configuration
+config:
+  node:
+    deploymentMode: "production"
+    resourceLimits:
+      maxMemoryGb: 8
+      maxCpuCores: 4
+  
+  scheduler:
+    schedulerCores: [0, 1, 2, 3]
+    maxTasks: 10000
+    schedulingHorizonMs: 100
+    memoryPoolSize: 2147483648
+    enableDeadlineMonitoring: true
+  
+  drpp:
+    numOscillators: 2048
+    integrationTimestep: 0.001
+    integrationSteps: 100
+    patternThreshold: 0.7
+    useNeuromorphic: false
+  
+  adp:
+    numNeurons: 2048
+    neuralTimestep: 0.0001
+    evolutionSteps: 1000
+    useNeuromorphic: false
+    encodingDimension: 128
+  
+  egc:
+    verificationIntervalMs: 50
+    robustnessThreshold: 0.0
+    enablePredictiveVerification: true
+  
+  ems:
+    urgencyTau: 1.0
+    stressDecay: 0.1
+    criticalStressThreshold: 0.85
+    maxVolatility: 0.5
+  
+  sil:
+    blockchainEnabled: false
+    encryptionEnabled: true
+    auditRetentionDays: 30
+    consensusNodes: []
+  
+  network:
+    enableTcpFallback: false
+    enableEncryption: true
+    gossipIntervalMs: 1000
+
+# Telemetry configuration
+telemetry:
+  metrics:
+    enabled: true
+    port: 9090
+  tracing:
+    enabled: true
+    endpoint: "http://jaeger-collector.monitoring:4317"
+  logging:
+    level: "info"
+
+# Monitoring
+monitoring:
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+  
+  prometheusRule:
+    enabled: false
+    namespace: ""
+    rules: []
+
+# Network policies
+networkPolicy:
+  enabled: false
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: ares-csf
+      ports:
+      - protocol: TCP
+        port: 9000
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            k8s-app: kube-dns
+      ports:
+      - protocol: UDP
+        port: 53
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+  # maxUnavailable: 1
+
+# Extra environment variables
+extraEnvVars: []
+  # - name: EXTRA_VAR
+  #   value: "extra-value"
+
+# Extra volumes
+extraVolumes: []
+  # - name: extra-volume
+  #   configMap:
+  #     name: extra-configmap
+
+# Extra volume mounts
+extraVolumeMounts: []
+  # - name: extra-volume
+  #   mountPath: /extra
+
+# Init containers
+initContainers: []
+
+# Sidecar containers
+sidecarContainers: []
+
+# Health checks
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: api
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /ready
+    port: api
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Development mode
+development:
+  enabled: false
+  debug: false
+  profiling: false

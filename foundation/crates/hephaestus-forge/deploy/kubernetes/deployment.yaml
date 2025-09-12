@@ -1,0 +1,185 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hephaestus-forge
+  namespace: ares-system
+  labels:
+    app: hephaestus-forge
+    component: mes
+    tier: runtime
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hephaestus-forge
+  template:
+    metadata:
+      labels:
+        app: hephaestus-forge
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: hephaestus-forge
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsNonRoot: true
+      containers:
+      - name: forge
+        image: ares-registry.io/hephaestus-forge:latest
+        imagePullPolicy: Always
+        ports:
+        - name: api
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: FORGE_MODE
+          value: "autonomous"
+        - name: RESONANCE_ENABLED
+          value: "true"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: CHAOS_ENGINEERING
+          value: "false"
+        volumeMounts:
+        - name: config
+          mountPath: /etc/forge
+          readOnly: true
+        - name: data
+          mountPath: /var/lib/hephaestus-forge
+        - name: logs
+          mountPath: /var/log/hephaestus-forge
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: api
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: api
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: forge-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: forge-data
+      - name: logs
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hephaestus-forge
+  namespace: ares-system
+  labels:
+    app: hephaestus-forge
+spec:
+  type: ClusterIP
+  ports:
+  - name: api
+    port: 8080
+    targetPort: api
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: hephaestus-forge
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forge-config
+  namespace: ares-system
+data:
+  config.toml: |
+    [forge]
+    mode = "autonomous"
+    enable_resonance = true
+    
+    [synthesis]
+    timeout_secs = 300
+    max_candidates = 10
+    
+    [testing]
+    differential_testing = true
+    chaos_engineering = false
+    shadow_traffic_percent = 10.0
+    
+    [consensus]
+    nodes = ["node1:8080", "node2:8080", "node3:8080"]
+    min_validators = 2
+    consensus_timeout_ms = 5000
+    
+    [resource_limits]
+    max_concurrent_optimizations = 5
+    synthesis_cpu_cores = 4
+    testing_memory_gb = 4
+    
+    [monitoring]
+    export_interval_ms = 10000
+    retention_days = 30
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: forge-data
+  namespace: ares-system
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hephaestus-forge
+  namespace: ares-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hephaestus-forge
+  namespace: ares-system
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hephaestus-forge
+  namespace: ares-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hephaestus-forge
+subjects:
+- kind: ServiceAccount
+  name: hephaestus-forge
+  namespace: ares-system

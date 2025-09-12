@@ -1,0 +1,83 @@
+# ARES Neuromorphic CLI Configuration
+# This file configures the natural language processing and neuromorphic backend settings
+
+[neuromorphic]
+# Backend selection: auto, brian2-cpu, brian2-gpu, lava-sim, lava-hardware, native
+backend_strategy = "auto"
+
+# Resource allocation for always-on NLP (0.1 = 10% of neuromorphic resources)
+nlp_allocation = 0.15
+
+[neuromorphic.brian2]
+# Brian2 neuromorphic simulator settings
+device = "auto"  # auto, cpp_standalone, cuda_standalone
+threads = "auto"  # Number of CPU threads (auto = detect optimal)
+use_gpu = true   # Enable GPU acceleration if available
+optimization = "O3"  # Compiler optimization level
+
+[neuromorphic.lava]
+# Intel Lava SDK settings
+prefer_hardware = true  # Use neuromorphic chips when available
+precision = "fp32"     # Simulation precision (fp16, fp32)
+gpu_simulation = true  # Enable GPU-accelerated simulation
+
+[neuromorphic.learning]
+# Online learning configuration
+learning_rate = 0.01          # STDP learning rate
+confidence_threshold = 0.85   # Minimum confidence for pattern acceptance
+max_patterns = 10000         # Maximum stored patterns
+online_learning = true       # Enable continuous learning
+
+[neuromorphic.hardware]
+# Hardware preferences
+gpu_device = "auto"          # GPU device ID (auto = best available)
+min_gpu_memory = 4.0        # Minimum GPU memory (GB)
+detect_neuromorphic_chips = true  # Auto-detect Loihi/neuromorphic hardware
+
+[interface]
+# CLI interface settings
+default_format = "human"     # Output format: human, json, yaml
+colored_output = true        # Enable colored terminal output
+auto_confirm_threshold = 0.9 # Auto-execute commands above this confidence
+show_timing = false         # Show processing time in output
+
+[interface.interactive]
+# Interactive mode settings
+show_welcome = true         # Show welcome message
+enable_history = true       # Command history
+max_history = 1000         # Maximum history entries
+
+[logging]
+# Logging configuration
+level = "info"             # Log level: trace, debug, info, warn, error
+structured = false         # Use JSON structured logging
+log_neuromorphic = true    # Log neuromorphic operations
+
+[security]
+# Security and safety settings
+confirm_destructive = true  # Require confirmation for dangerous commands
+sandbox_unknown = true     # Sandbox unrecognized commands
+max_execution_time = 300   # Maximum command execution time (seconds)
+audit_logging = true      # Enable audit trail
+
+# Advanced neuromorphic parameters (for experts)
+[advanced]
+# Neural network topology
+vocab_neurons = 10000      # Vocabulary encoding neurons
+context_neurons = 5000     # Context analysis neurons
+command_neurons = 1000     # Command output neurons
+
+# STDP parameters
+tau_pre = 16.8            # Pre-synaptic trace decay (ms)
+tau_post = 33.7           # Post-synaptic trace decay (ms)
+w_max = 40               # Maximum synaptic weight
+
+# Pattern recognition
+pattern_threshold = 0.7   # Pattern detection threshold
+time_window_ms = 1000    # Analysis time window
+
+# C-LOGIC integration
+enable_drpp = true       # Dynamic Resonance Pattern Processor
+enable_ems = true        # Emotional Modeling System
+enable_adp = true        # Adaptive Decision Processor
+enable_egc = true        # Emergent Governance Controller

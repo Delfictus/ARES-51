@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-csf
+  labels:
+    app: ares-csf
+    component: core
+spec:
+  type: ClusterIP
+  selector:
+    app: ares-csf
+  ports:
+  - name: api
+    port: 8080
+    targetPort: api
+    protocol: TCP
+  - name: network
+    port: 9000
+    targetPort: network
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-csf-headless
+  labels:
+    app: ares-csf
+    component: core
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: ares-csf
+  ports:
+  - name: network
+    port: 9000
+    targetPort: network
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-csf-external
+  labels:
+    app: ares-csf
+    component: core
+spec:
+  type: LoadBalancer
+  selector:
+    app: ares-csf
+  ports:
+  - name: api
+    port: 80
+    targetPort: api
+    protocol: TCP

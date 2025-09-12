@@ -1,0 +1,22 @@
+apiVersion: v2
+name: ares-csf
+description: ARES Chronosynclastic Fabric - Next-generation real-time computing platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - ares
+  - csf
+  - real-time
+  - distributed-systems
+  - quantum-computing
+home: https://ares-csf.io
+sources:
+  - https://github.com/ares-systems/chronofabric
+maintainers:
+  - name: ARES Team
+    email: dev@ares-systems.io
+    url: https://ares-systems.io
+icon: https://ares-csf.io/logo.png
+annotations:
+  category: Infrastructure

@@ -1,0 +1,12 @@
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/signature-9e4ce42f6f91266d.d: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/hazmat.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/encoding.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/error.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/keypair.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/signer.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/verifier.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/../README.md
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/libsignature-9e4ce42f6f91266d.rmeta: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/hazmat.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/encoding.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/error.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/keypair.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/signer.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/verifier.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/../README.md
+
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/lib.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/hazmat.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/encoding.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/error.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/keypair.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/signer.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/verifier.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-2.2.0/src/../README.md:

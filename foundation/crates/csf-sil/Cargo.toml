@@ -1,0 +1,43 @@
+[package]
+name = "csf-sil"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Secure Immutable Ledger (SIL) for ARES CSF"
+
+[dependencies]
+csf-core = { path = "../csf-core", features = ["net"] }
+csf-time = { path = "../csf-time" }
+tokio = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+blake3 = { workspace = true }
+ed25519-dalek = { workspace = true, features = ["serde"] }
+x25519-dalek = { workspace = true }
+ring = { workspace = true }
+parking_lot = { workspace = true }
+sled = { workspace = true }
+rocksdb = { workspace = true, optional = true, default-features = false }
+serde = { workspace = true }
+bincode = { workspace = true }
+bytes = { workspace = true }
+rand = "0.8"
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+tracing = { workspace = true }
+
+[features]
+default = []
+rocksdb = ["dep:rocksdb"]
+blockchain = []
+substrate = []
+
+[dev-dependencies]
+tempfile = "3.8"
+criterion = { workspace = true }
+tracing-subscriber = { workspace = true }

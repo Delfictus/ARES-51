@@ -1,0 +1,205 @@
+name: Security Audit
+
+on:
+  schedule:
+    # Run at 2 AM UTC every Monday
+    - cron: '0 2 * * 1'
+  push:
+    paths:
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+  pull_request:
+    paths:
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Install security tools
+        run: |
+          cargo install cargo-audit
+          cargo install cargo-deny
+          cargo install cargo-license
+          
+      - name: Run cargo audit
+        run: cargo audit
+        
+      - name: Run cargo deny
+        run: cargo deny check
+        
+      - name: Check licenses
+        run: cargo license --json > licenses.json
+        
+      - name: Upload license report
+        uses: actions/upload-artifact@v3
+        with:
+          name: license-report
+          path: licenses.json
+          
+      - name: Check for known vulnerabilities in dependencies
+        run: |
+          # Check for specific CVEs
+          cargo audit --deny warnings
+          
+      - name: SBOM Generation
+        run: |
+          cargo install cargo-sbom
+          cargo sbom > sbom.json
+          
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v3
+        with:
+          name: sbom
+          path: sbom.json
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: high
+          
+  supply-chain-security:
+    name: Supply Chain Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@v2.3.1
+        with:
+          results_file: scorecard.json
+          results_format: json
+          publish_results: true
+          
+      - name: Upload Scorecard results
+        uses: actions/upload-artifact@v3
+        with:
+          name: scorecard-results
+          path: scorecard.json
+
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build container image
+        run: docker build -t ares-csf:scan .
+        
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ares-csf:scan'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+          
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@v3
+        with:
+          image: 'ares-csf:scan'
+          fail-build: true
+          severity-cutoff: high
+
+  static-analysis:
+    name: Static Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install analysis tools
+        run: |
+          cargo install cargo-geiger
+          pip install semgrep
+          
+      - name: Check for unsafe code
+        run: cargo geiger --all-features
+        
+      - name: Run Semgrep
+        run: |
+          semgrep --config=auto --json -o semgrep-results.json
+          
+      - name: Upload Semgrep results
+        uses: actions/upload-artifact@v3
+        with:
+          name: semgrep-results
+          path: semgrep-results.json
+
+  secret-scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  fuzzing:
+    name: Fuzz Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'fuzzing')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz
+        
+      - name: Run fuzz tests
+        run: |
+          cd crates/csf-core
+          cargo fuzz run phase_packet_parse -- -max_total_time=300
+        continue-on-error: true
+        
+      - name: Upload fuzz artifacts
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: fuzz-artifacts
+          path: crates/csf-core/fuzz/artifacts/

@@ -1,0 +1,67 @@
+[package]
+name = "csf-telemetry"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Telemetry and metrics collection for ARES CSF"
+
+[dependencies]
+# Core dependencies
+csf-core = { path = "../csf-core" }
+csf-time = { path = "../csf-time" }
+
+# Async runtime
+tokio = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+
+# Metrics & Telemetry
+prometheus = { workspace = true }
+opentelemetry = { version = "0.21", features = ["trace", "metrics"] }
+opentelemetry_sdk = { version = "0.21", features = ["trace", "rt-tokio"] }
+opentelemetry-otlp = { version = "0.14", features = ["tonic", "metrics", "trace"] }
+opentelemetry-prometheus = "0.14"
+opentelemetry-jaeger = { version = "0.20" }
+tracing = { workspace = true }
+tracing-opentelemetry = "0.22"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Data structures
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+bincode = { workspace = true }
+
+# Time series
+hdrhistogram = "7.5"
+
+# System metrics
+sysinfo = { workspace = true }
+nvml-wrapper = { version = "0.9", optional = true }
+procfs = { version = "0.16", optional = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+# HTTP client and compression
+reqwest = { version = "0.12", features = ["json"] }
+zstd = "0.13"
+
+[features]
+default = ["system-metrics"]
+system-metrics = ["procfs"]
+nvidia-gpu = ["nvml-wrapper"]
+
+[dev-dependencies]
+criterion = { workspace = true }

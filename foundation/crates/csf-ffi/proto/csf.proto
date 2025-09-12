@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package csf;
+
+// ARES ChronoFabric gRPC Service Definition
+// This defines the external gRPC interface for CSF system integration
+
+service ChronoFabricService {
+    // Core operations
+    rpc Initialize(InitializeRequest) returns (InitializeResponse);
+    rpc ProcessQuantumData(QuantumDataRequest) returns (QuantumDataResponse);
+    rpc GetSystemStatus(StatusRequest) returns (StatusResponse);
+    rpc Shutdown(ShutdownRequest) returns (ShutdownResponse);
+    
+    // Streaming operations
+    rpc StreamQuantumEvents(stream QuantumEventRequest) returns (stream QuantumEventResponse);
+    rpc MonitorPerformance(PerformanceRequest) returns (stream PerformanceUpdate);
+}
+
+// Request/Response Messages
+message InitializeRequest {
+    string config_path = 1;
+    map<string, string> parameters = 2;
+}
+
+message InitializeResponse {
+    bool success = 1;
+    string message = 2;
+    string session_id = 3;
+}
+
+message QuantumDataRequest {
+    string session_id = 1;
+    bytes quantum_data = 2;
+    int64 timestamp_ns = 3;
+    QuantumPrecisionLevel precision = 4;
+}
+
+message QuantumDataResponse {
+    bool success = 1;
+    bytes processed_data = 2;
+    double coherence_factor = 3;
+    string error_message = 4;
+}
+
+message StatusRequest {
+    string session_id = 1;
+}
+
+message StatusResponse {
+    SystemStatus status = 1;
+    PerformanceMetrics metrics = 2;
+    repeated string active_components = 3;
+}
+
+message ShutdownRequest {
+    string session_id = 1;
+    bool force_immediate = 2;
+}
+
+message ShutdownResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message QuantumEventRequest {
+    string session_id = 1;
+    EventType event_type = 2;
+    bytes event_data = 3;
+}
+
+message QuantumEventResponse {
+    bool processed = 1;
+    string event_id = 2;
+    bytes result_data = 3;
+}
+
+message PerformanceRequest {
+    string session_id = 1;
+    int32 update_interval_ms = 2;
+}
+
+message PerformanceUpdate {
+    int64 timestamp_ns = 1;
+    double cpu_usage = 2;
+    double memory_usage = 3;
+    int64 processed_events = 4;
+    double avg_latency_ns = 5;
+}
+
+// Enums
+enum SystemStatus {
+    UNKNOWN = 0;
+    INITIALIZING = 1;
+    RUNNING = 2;
+    DEGRADED = 3;
+    ERROR = 4;
+    SHUTDOWN = 5;
+}
+
+enum QuantumPrecisionLevel {
+    MICROSECOND = 0;
+    NANOSECOND = 1;
+    PICOSECOND = 2;
+    FEMTOSECOND = 3;
+}
+
+enum EventType {
+    PHASE_UPDATE = 0;
+    COHERENCE_LOSS = 1;
+    TEMPORAL_SYNC = 2;
+    QUANTUM_ENTANGLEMENT = 3;
+}
+
+// Complex Types
+message PerformanceMetrics {
+    int64 avg_response_time_ns = 1;
+    int64 peak_response_time_ns = 2;
+    double throughput_ops_sec = 3;
+    double energy_efficiency = 4;
+    double coherence_maintenance_rate = 5;
+    double error_rate_ppm = 6;
+    double resource_utilization = 7;
+    double adaptation_success_rate = 8;
+}

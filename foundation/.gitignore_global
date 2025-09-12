@@ -1,0 +1,46 @@
+# Ignore OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore editor-specific files
+*.swp
+*~
+*.bak
+*.tmp
+*.orig
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore Python files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+.eggs/
+dist/
+build/
+*.egg-info/
+htmlcov/
+.tox/
+
+# Ignore Node.js files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock

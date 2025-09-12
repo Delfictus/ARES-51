@@ -1,0 +1,173 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'ares-chronofabric'
+    environment: 'production'
+
+rule_files:
+  - "alert_rules.yml"
+  - "recording_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # ARES ChronoFabric Core Services
+  - job_name: 'ares-csf-core'
+    static_configs:
+      - targets: ['ares-csf:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics
+    scheme: https
+    tls_config:
+      insecure_skip_verify: false
+      ca_file: /etc/ssl/certs/ares-ca.pem
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '(quantum_.*|sla_.*|business_.*)'
+        target_label: metric_category
+        replacement: 'enterprise'
+
+  # Quantum Operations Metrics
+  - job_name: 'quantum-operations'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - ares-production
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+    scrape_interval: 5s
+    scrape_timeout: 3s
+
+  # System Infrastructure Metrics  
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  - job_name: 'kube-state-metrics'
+    static_configs:
+      - targets: ['kube-state-metrics:8080']
+    scrape_interval: 30s
+
+  # External Service Monitoring
+  - job_name: 'blackbox-exporter'
+    static_configs:
+      - targets:
+        - https://api.ares-csf.com/health
+        - https://quantum-api.ares-csf.com/health
+        - https://temporal-api.ares-csf.com/health
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Business Metrics Collection
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['business-metrics-collector:8080']
+    scrape_interval: 60s
+    metrics_path: /business-metrics
+    scheme: https
+    basic_auth:
+      username: 'prometheus'
+      password_file: /etc/prometheus/business-metrics-password
+
+  # Security Metrics
+  - job_name: 'security-scanner'
+    static_configs:
+      - targets: ['security-scanner:9200']
+    scrape_interval: 300s
+    metrics_path: /security-metrics
+    scheme: https
+
+  # Performance Benchmarks
+  - job_name: 'performance-benchmarks'
+    static_configs:
+      - targets: ['benchmark-runner:8090']
+    scrape_interval: 300s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'benchmark_.*'
+        target_label: metric_type
+        replacement: 'performance'
+
+  # Compliance Monitoring
+  - job_name: 'compliance-monitor'
+    static_configs:
+      - targets: ['compliance-monitor:9300']
+    scrape_interval: 3600s
+    metrics_path: /compliance-metrics
+    scheme: https
+    tls_config:
+      cert_file: /etc/ssl/certs/compliance-client.pem
+      key_file: /etc/ssl/private/compliance-client.key
+
+  # Custom Application Metrics
+  - job_name: 'custom-metrics'
+    file_sd_configs:
+      - files:
+        - '/etc/prometheus/custom-targets.json'
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_filepath]
+        target_label: config_file
+
+# Remote storage configuration for long-term retention
+remote_write:
+  - url: "https://prometheus-remote-storage.ares-internal.com/api/v1/write"
+    basic_auth:
+      username: 'ares-csf'
+      password_file: /etc/prometheus/remote-storage-password
+    queue_config:
+      max_samples_per_send: 10000
+      max_shards: 200
+      capacity: 100000
+    metadata_config:
+      send: true
+      send_interval: 30s
+      max_samples_per_send: 2000
+
+# Storage configuration
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 100GB
+    wal-compression: true
+    no-lockfile: false

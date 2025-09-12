@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares-csf
+spec:
+  replicas: 5
+  template:
+    spec:
+      containers:
+      - name: ares-csf
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+          limits:
+            memory: "16Gi"
+            cpu: "8000m"
+        env:
+        - name: RUST_LOG
+          value: "warn,ares_csf=info"
+        - name: CSF_DEPLOYMENT
+          value: "production"
+        livenessProbe:
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+      nodeSelector:
+        node-type: compute-optimized
+      tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "ares-csf"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - ares-csf
+            topologyKey: kubernetes.io/hostname

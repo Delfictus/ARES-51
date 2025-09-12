@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares-csf
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: ares-csf
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        env:
+        - name: RUST_LOG
+          value: "debug,ares_csf=trace"
+        - name: RUST_BACKTRACE
+          value: "1"
+        - name: CSF_DEPLOYMENT
+          value: "development"
+        - name: CSF_ENABLE_PROFILING
+          value: "true"
+        volumeMounts:
+        - name: debug-tools
+          mountPath: /debug
+      volumes:
+      - name: debug-tools
+        emptyDir: {}
+      # Remove anti-affinity for development
+      affinity: null

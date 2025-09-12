@@ -1,0 +1,68 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ares-csf
+  labels:
+    app: ares-csf
+spec:
+  podSelector:
+    matchLabels:
+      app: ares-csf
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow API access from anywhere in the cluster
+  - from:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow network communication between CSF nodes
+  - from:
+    - podSelector:
+        matchLabels:
+          app: ares-csf
+    ports:
+    - protocol: TCP
+      port: 9000
+  # Allow metrics scraping from monitoring namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow communication to other CSF nodes
+  - to:
+    - podSelector:
+        matchLabels:
+          app: ares-csf
+    ports:
+    - protocol: TCP
+      port: 9000
+  # Allow sending traces to Jaeger
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 4317
+  # Allow external HTTPS (for blockchain nodes, if enabled)
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443

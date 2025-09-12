@@ -1,0 +1,230 @@
+# ARES CSF Justfile
+# https://github.com/casey/just
+
+# Default recipe
+default:
+    @just --list
+
+# Setup development environment
+setup:
+    ./scripts/setup-dev.sh
+
+# Build commands
+build:
+    cargo build --all
+
+build-release:
+    cargo build --release --all
+
+# Test commands
+test:
+    cargo test --all
+
+test-watch:
+    cargo watch -x test
+
+test-integration:
+    cargo test --test '*' -- --test-threads=1
+
+test-coverage:
+    cargo tarpaulin --out Html --output-dir coverage
+
+# Benchmark
+bench:
+    cargo criterion --all
+
+bench-compare BASELINE:
+    cargo criterion --all -- --baseline {{BASELINE}}
+
+# Code quality
+fmt:
+    cargo fmt --all
+
+lint:
+    cargo clippy --all-targets --all-features -- -D warnings
+
+check: fmt lint test
+
+audit:
+    cargo audit
+    cargo deny check
+
+# Run commands
+run *ARGS:
+    RUST_LOG=debug cargo run -- {{ARGS}}
+
+run-release *ARGS:
+    cargo run --release -- {{ARGS}}
+
+watch:
+    cargo watch -x 'run -- --config config/dev.toml'
+
+# Docker commands
+docker-build TAG='latest':
+    docker build -t ares-csf:{{TAG}} .
+
+docker-run:
+    docker-compose up -d
+
+docker-stop:
+    docker-compose down
+
+docker-logs SERVICE='':
+    docker-compose logs -f {{SERVICE}}
+
+# Kubernetes commands
+k8s-deploy ENV='development':
+    kubectl apply -k deployments/kubernetes/overlays/{{ENV}}
+
+k8s-delete ENV='development':
+    kubectl delete -k deployments/kubernetes/overlays/{{ENV}}
+
+k8s-logs POD='':
+    kubectl logs -f {{POD}}
+
+# Documentation
+docs:
+    cargo doc --no-deps --all-features --open
+
+docs-serve:
+    cd docs && mdbook serve
+
+# Release management
+release VERSION:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    
+    # Update version in Cargo.toml
+    sed -i 's/^version = .*/version = "{{VERSION}}"/' Cargo.toml
+    
+    # Commit changes
+    git add Cargo.toml Cargo.lock
+    git commit -m "chore: bump version to {{VERSION}}"
+    
+    # Create tag
+    git tag -a v{{VERSION}} -m "Release v{{VERSION}}"
+    
+    # Build release
+    cargo build --release
+    
+    echo "Release v{{VERSION}} prepared. Push with: git push && git push --tags"
+
+# Monitoring
+monitoring-up:
+    docker-compose --profile monitoring up -d
+    @echo "Grafana: http://localhost:3000 (admin/admin)"
+    @echo "Prometheus: http://localhost:9093"
+    @echo "Jaeger: http://localhost:16686"
+
+monitoring-down:
+    docker-compose --profile monitoring down
+
+# Stress testing
+stress-test TYPE='throughput':
+    ./scripts/stress-test.sh {{TYPE}}
+
+# Performance profiling
+profile CMD='cargo run --release':
+    cargo flamegraph --root -- {{CMD}}
+
+# Clean
+clean:
+    cargo clean
+    rm -rf target/ dist/ coverage/
+
+clean-all: clean
+    rm -rf ~/.cargo/registry/cache/
+    docker-compose down -v
+    docker system prune -f
+
+# Utility recipes
+todo:
+    @rg -i "todo|fixme|hack" --type rust
+
+loc:
+    @tokei
+
+deps-tree:
+    cargo tree
+
+deps-outdated:
+    cargo outdated
+
+# CI/CD
+ci-local:
+    act -j test
+
+pre-commit: check
+    @echo "✅ All pre-commit checks passed!"
+
+# Advanced recipes
+flame BINARY='chronofabric' ARGS='':
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    
+    # Build with debug symbols
+    cargo build --release
+    
+    # Record with perf
+    sudo perf record -F 99 -g target/release/{{BINARY}} {{ARGS}} &
+    PID=$!
+    sleep 30
+    sudo kill -SIGTERM $PID || true
+    
+    # Generate flamegraph
+    sudo perf script | inferno-collapse-perf | inferno-flamegraph > flamegraph.svg
+    
+    echo "Flamegraph saved to flamegraph.svg"
+
+# Multi-node testing
+cluster-up NODES='3':
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    
+    for i in $(seq 1 {{NODES}}); do
+        docker-compose up -d csf-node-$i
+    done
+    
+    echo "Started {{NODES}} CSF nodes"
+
+cluster-down:
+    docker-compose down
+
+# Database management
+db-init:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    
+    docker-compose up -d postgres redis
+    sleep 5
+    
+    # Initialize schema
+    psql -h localhost -U ares -d ares_csf -f schema/init.sql
+
+db-migrate:
+    sqlx migrate run
+
+# Security scanning
+security-scan:
+    # Rust security audit
+    cargo audit
+    
+    # Docker image scan
+    docker build -t ares-csf:scan .
+    trivy image ares-csf:scan
+    
+    # Secrets scan
+    gitleaks detect
+
+# Environment setup
+env-check:
+    #!/usr/bin/env bash
+    echo "Checking development environment..."
+    
+    command -v rustc >/dev/null 2>&1 || { echo "❌ Rust not installed"; exit 1; }
+    command -v cargo >/dev/null 2>&1 || { echo "❌ Cargo not installed"; exit 1; }
+    command -v docker >/dev/null 2>&1 || { echo "❌ Docker not installed"; exit 1; }
+    command -v kubectl >/dev/null 2>&1 || { echo "⚠️  kubectl not installed (optional)"; }
+    command -v nvidia-smi >/dev/null 2>&1 || { echo "⚠️  CUDA not available (optional)"; }
+    
+    echo "✅ Environment check passed!"

@@ -1,0 +1,276 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-config
+  namespace: observability
+data:
+  elasticsearch.yml: |
+    cluster.name: ares-observability
+    node.name: ${HOSTNAME}
+    node.data: true
+    node.master: true
+    node.ingest: true
+    
+    network.host: 0.0.0.0
+    http.port: 9200
+    transport.port: 9300
+    
+    discovery.seed_hosts: ["elasticsearch-0.elasticsearch.observability.svc.cluster.local:9300", "elasticsearch-1.elasticsearch.observability.svc.cluster.local:9300", "elasticsearch-2.elasticsearch.observability.svc.cluster.local:9300"]
+    cluster.initial_master_nodes: ["elasticsearch-0", "elasticsearch-1", "elasticsearch-2"]
+    
+    bootstrap.memory_lock: false
+    
+    # Security settings
+    xpack.security.enabled: true
+    xpack.security.transport.ssl.enabled: true
+    xpack.security.transport.ssl.verification_mode: certificate
+    xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+    xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+    xpack.security.http.ssl.enabled: true
+    xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+    
+    # ARES-specific settings
+    index.number_of_shards: 3
+    index.number_of_replicas: 1
+    index.refresh_interval: 5s
+    
+    # Performance tuning for quantum trace data
+    indices.memory.index_buffer_size: 20%
+    indices.memory.min_index_buffer_size: 256mb
+    
+    # Quantum trace index templates
+    index.template.ares_quantum_traces.patterns: ["ares-quantum-*"]
+    index.template.ares_quantum_traces.settings:
+      number_of_shards: 5
+      number_of_replicas: 1
+      refresh_interval: "1s"
+      
+    index.template.ares_temporal_events.patterns: ["ares-temporal-*"]
+    index.template.ares_temporal_events.settings:
+      number_of_shards: 3
+      number_of_replicas: 1
+      refresh_interval: "5s"
+
+  jvm.options: |
+    -Xms2g
+    -Xmx2g
+    -XX:+UseG1GC
+    -XX:G1HeapRegionSize=16m
+    -XX:+DisableExplicitGC
+    -XX:+AlwaysPreTouch
+    -XX:+UseTransparentHugePages
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:HeapDumpPath=/var/lib/elasticsearch
+    -XX:ErrorFile=/var/lib/elasticsearch/hs_err_pid%p.log
+    -XX:+PrintGCDetails
+    -XX:+PrintGCTimeStamps
+    -XX:+PrintGCDateStamps
+    -XX:+PrintClassHistogram
+    -XX:+PrintTenuringDistribution
+    -XX:+PrintGCApplicationStoppedTime
+    -Xloggc:/var/lib/elasticsearch/gc.log
+    -XX:+UseGCLogFileRotation
+    -XX:NumberOfGCLogFiles=32
+    -XX:GCLogFileSize=64m
+
+  log4j2.properties: |
+    status = error
+    appender.console.type = Console
+    appender.console.name = console
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] [%node_name]%marker %m%n
+    
+    appender.rolling.type = RollingFile
+    appender.rolling.name = rolling
+    appender.rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}.log
+    appender.rolling.layout.type = PatternLayout
+    appender.rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] [%node_name]%marker %m%n
+    appender.rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}-%d{yyyy-MM-dd}-%i.log.gz
+    appender.rolling.policies.type = Policies
+    appender.rolling.policies.time.type = TimeBasedTriggeringPolicy
+    appender.rolling.policies.time.interval = 1
+    appender.rolling.policies.time.modulate = true
+    appender.rolling.policies.size.type = SizeBasedTriggeringPolicy
+    appender.rolling.policies.size.size = 256MB
+    appender.rolling.strategy.type = DefaultRolloverStrategy
+    appender.rolling.strategy.fileIndex = nomax
+    appender.rolling.strategy.action.type = Delete
+    appender.rolling.strategy.action.basepath = ${sys:es.logs.base_path}
+    appender.rolling.strategy.action.condition.type = IfFileName
+    appender.rolling.strategy.action.condition.glob = ${sys:es.logs.cluster_name}-*
+    appender.rolling.strategy.action.condition.nested.type = IfAccumulatedFileSize
+    appender.rolling.strategy.action.condition.nested.exceeds = 2GB
+    
+    rootLogger.level = info
+    rootLogger.appenderRef.console.ref = console
+    rootLogger.appenderRef.rolling.ref = rolling
+    
+    logger.deprecation.name = org.elasticsearch.deprecation
+    logger.deprecation.level = warn
+    logger.deprecation.appenderRef.deprecation_rolling.ref = deprecation_rolling
+    logger.deprecation.additivity = false
+    
+    appender.deprecation_rolling.type = RollingFile
+    appender.deprecation_rolling.name = deprecation_rolling
+    appender.deprecation_rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_deprecation.log
+    appender.deprecation_rolling.layout.type = PatternLayout
+    appender.deprecation_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] [%node_name]%marker %m%n
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: observability
+  labels:
+    app: elasticsearch
+spec:
+  serviceName: elasticsearch
+  replicas: 3
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      serviceAccountName: elasticsearch
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+      - name: increase-vm-max-map
+        image: busybox:1.35
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+        securityContext:
+          privileged: true
+      - name: increase-fd-ulimit
+        image: busybox:1.35
+        command: ["sh", "-c", "ulimit -n 65536"]
+        securityContext:
+          privileged: true
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: transport
+        env:
+        - name: CLUSTER_NAME
+          value: "ares-observability"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ES_JAVA_OPTS
+          value: "-Xms2g -Xmx2g"
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretRef:
+              name: elasticsearch-credentials
+              key: password
+        resources:
+          requests:
+            memory: 4Gi
+            cpu: 1
+          limits:
+            memory: 6Gi
+            cpu: 2
+        volumeMounts:
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+        - name: elasticsearch-config
+          mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+          subPath: elasticsearch.yml
+        - name: elasticsearch-jvm-config
+          mountPath: /usr/share/elasticsearch/config/jvm.options
+          subPath: jvm.options
+        - name: elasticsearch-log4j-config
+          mountPath: /usr/share/elasticsearch/config/log4j2.properties
+          subPath: log4j2.properties
+        - name: elasticsearch-certs
+          mountPath: /usr/share/elasticsearch/config/certs
+        livenessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: 9200
+            scheme: HTTPS
+            httpHeaders:
+            - name: Authorization
+              value: "Basic ZWxhc3RpYzpjaGFuZ2VtZQ=="
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: 9200
+            scheme: HTTPS
+            httpHeaders:
+            - name: Authorization
+              value: "Basic ZWxhc3RpYzpjaGFuZ2VtZQ=="
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: elasticsearch-config
+        configMap:
+          name: elasticsearch-config
+          items:
+          - key: elasticsearch.yml
+            path: elasticsearch.yml
+      - name: elasticsearch-jvm-config
+        configMap:
+          name: elasticsearch-config
+          items:
+          - key: jvm.options
+            path: jvm.options
+      - name: elasticsearch-log4j-config
+        configMap:
+          name: elasticsearch-config
+          items:
+          - key: log4j2.properties
+            path: log4j2.properties
+      - name: elasticsearch-certs
+        secret:
+          secretName: elasticsearch-certs
+  volumeClaimTemplates:
+  - metadata:
+      name: elasticsearch-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 100Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: observability
+  labels:
+    app: elasticsearch
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: 9200
+    targetPort: 9200
+  - name: transport
+    port: 9300
+    targetPort: 9300
+  selector:
+    app: elasticsearch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: elasticsearch
+  namespace: observability
+  labels:
+    app: elasticsearch

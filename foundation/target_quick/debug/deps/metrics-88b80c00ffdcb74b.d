@@ -1,0 +1,12 @@
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/metrics-88b80c00ffdcb74b.d: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/atomics.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/common.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/cow.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/handles.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/key.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/label.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/recorder.rs
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/libmetrics-88b80c00ffdcb74b.rmeta: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/atomics.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/common.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/cow.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/handles.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/key.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/label.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/recorder.rs
+
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/lib.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/atomics.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/common.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/cow.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/handles.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/key.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/label.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metrics-0.21.1/src/recorder.rs:

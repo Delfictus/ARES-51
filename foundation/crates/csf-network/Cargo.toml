@@ -1,0 +1,69 @@
+[package]
+name = "csf-network"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Network protocol implementation for ARES CSF"
+
+[dependencies]
+# Core dependencies
+csf-core = { path = "../csf-core" }
+csf-bus = { path = "../csf-bus" }
+csf-protocol = { path = "../csf-protocol" }
+csf-time = { path = "../csf-time" }
+
+# Async runtime
+tokio = { workspace = true, features = ["net", "io-util", "macros", "time"] }
+futures = { workspace = true }
+async-trait = { workspace = true }
+
+# Network protocols
+quinn = { version = "0.11", features = ["ring"] }
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+tonic = { workspace = true }
+prost = { workspace = true }
+tower = { version = "0.4", features = ["full"] }
+
+# Serialization
+serde = { workspace = true }
+bincode = { workspace = true }
+bytes = { workspace = true }
+rmp-serde = { version = "1.1" }
+
+# Security
+rustls = { version = "0.21", features = ["dangerous_configuration"] }
+rustls-pemfile = "1.0"
+ring = { workspace = true }
+webpki = "0.22"
+rcgen = "0.13"
+x509-parser = "0.15"
+
+# Discovery & Routing
+libp2p = { version = "0.54", features = ["tokio", "tcp", "noise", "yamux", "kad", "gossipsub", "mdns", "identify", "macros"] }
+hickory-resolver = { version = "0.24", features = ["tokio-runtime"] }
+
+# Concurrency & Utilities
+dashmap = "5.5"
+rand = { workspace = true }
+parking_lot = { workspace = true }
+
+# Compression
+lz4 = "1.24"
+zstd = "0.13"
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging & Metrics
+log = { workspace = true }
+tracing = { workspace = true }
+prometheus = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.8"
+criterion = { workspace = true }

@@ -1,0 +1,118 @@
+{
+  "name": "ARES CSF Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "VARIANT": "1.75-bullseye",
+      "NODE_VERSION": "18"
+    }
+  },
+
+  // Features to add to the dev container
+  "features": {
+    "ghcr.io/devcontainer/features/common-utils:2": {
+      "installZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000"
+    },
+    "ghcr.io/devcontainer/features/rust:1": {
+      "version": "latest",
+      "profile": "default"
+    },
+    "ghcr.io/devcontainer/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainer/features/node:1": {
+      "version": "18"
+    },
+    "ghcr.io/devcontainer/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    },
+    "ghcr.io/devcontainer/features/github-cli:1": {},
+    "ghcr.io/devcontainer/features/sshd:1": {}
+  },
+
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "rust-analyzer.cargo.features": "all",
+        "rust-analyzer.checkOnSave.command": "clippy"
+      },
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "serayuzgur.crates",
+        "tamasfe.even-better-toml",
+        "emoji.gitlens",
+        "streetsidesoftware.code-spell-checker",
+        "wayou.vscode-todo-highlight",
+        "gruntingly.todo-tree",
+        "username.errorlens",
+        "yzhang.markdown-all-in-one",
+        "davidson.vscode-markdownlint",
+        "bierner.markdown-mermaid",
+        "ms-azuretools.vscode-docker",
+        "github.copilot",
+        "github.copilot-chat",
+        "google.geminicodeassist",
+        "fill-labs.dependi",
+        "Continue.continue"
+      ]
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "forwardPorts": [
+    8080,  // API server
+    9090,  // Metrics
+    9000,  // Network port
+    4317,  // OpenTelemetry
+    6831   // Jaeger
+  ],
+
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "./scripts/setup-dev.sh",
+
+  // Set environment variables
+  "containerEnv": {
+    "RUST_LOG": "debug",
+    "RUST_BACKTRACE": "1",
+    "CARGO_HOME": "/workspace/.cargo",
+    "RUSTUP_HOME": "/workspace/.rustup"
+  },
+
+  // Mount points
+  "mounts": [
+    "source=${localWorkspaceFolder}/.cargo,target=/workspace/.cargo,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.rustup,target=/workspace/.rustup,type=bind,consistency=cached",
+    "source=csf-target,target=/workspace/target,type=volume"
+  ],
+
+  // Run as non-root user
+  "remoteUser": "vscode",
+
+  // Capabilities
+  "capAdd": ["SYS_PTRACE", "NET_ADMIN"],
+  "securityOpt": ["seccomp=unconfined"],
+
+  // GPU support (for CUDA development)
+  "runArgs": [
+    "--gpus=all",
+    "--shm-size=4g",
+    "--ulimit=memlock=-1",
+    "--ulimit=stack=67108864"
+  ],
+
+  // Resources
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  }
+}

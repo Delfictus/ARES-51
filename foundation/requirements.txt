@@ -1,0 +1,72 @@
+# NovaCore Python Dependencies
+# This file lists all Python dependencies for development and usage
+
+# Build dependencies
+maturin>=1.4.0              # Build backend for Rust Python extensions
+setuptools>=65.0.0          # Python packaging tools
+wheel>=0.38.0               # Python wheel packaging
+
+# Core dependencies
+numpy>=1.24.0,<2.0.0        # Numerical computing
+scipy>=1.10.0               # Scientific computing
+pandas>=2.0.0               # Data manipulation
+
+# Async support
+aiohttp>=3.9.0              # Async HTTP client/server
+asyncio>=3.4.3              # Async I/O support
+
+# Testing
+pytest>=7.4.0               # Testing framework
+pytest-asyncio>=0.21.0      # Async test support
+pytest-cov>=4.1.0           # Coverage reporting
+pytest-benchmark>=4.0.0     # Performance benchmarks
+hypothesis>=6.82.0          # Property-based testing
+
+# Development tools
+black>=23.7.0               # Code formatter
+ruff>=0.1.0                 # Fast Python linter
+mypy>=1.5.0                 # Static type checker
+isort>=5.12.0               # Import sorter
+pre-commit>=3.3.0           # Git hooks
+
+# Documentation
+sphinx>=7.0.0               # Documentation generator
+sphinx-rtd-theme>=1.3.0     # ReadTheDocs theme
+autodoc>=0.5.0              # Auto documentation
+myst-parser>=2.0.0          # Markdown support
+
+# Notebooks (optional)
+jupyter>=1.0.0              # Jupyter notebooks
+jupyterlab>=4.0.0           # JupyterLab interface
+ipywidgets>=8.0.0           # Interactive widgets
+
+# Visualization (optional)
+matplotlib>=3.7.0           # Plotting library
+seaborn>=0.12.0             # Statistical visualization
+plotly>=5.15.0              # Interactive plots
+
+# ML/AI integrations (optional)
+torch>=2.0.0                # PyTorch integration
+tensorflow>=2.13.0          # TensorFlow integration
+jax>=0.4.0                  # JAX integration
+scikit-learn>=1.3.0         # Machine learning
+
+# Monitoring
+prometheus-client>=0.17.0   # Prometheus metrics
+opentelemetry-api>=1.20.0   # OpenTelemetry API
+opentelemetry-sdk>=1.20.0   # OpenTelemetry SDK
+
+# Networking
+grpcio>=1.56.0              # gRPC support
+protobuf>=4.23.0            # Protocol buffers
+websockets>=11.0.0          # WebSocket client/server
+
+# Security
+cryptography>=41.0.0        # Cryptographic recipes
+pynacl>=1.5.0               # Networking and cryptography
+
+# Utilities
+click>=8.1.0                # CLI creation
+pydantic>=2.0.0             # Data validation
+python-dotenv>=1.0.0        # Environment management
+structlog>=23.1.0           # Structured logging

@@ -1,0 +1,77 @@
+[package]
+name = "csf-enterprise"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ididia Serfaty <ididiaserfaty@protonmail.com>"]
+description = "ARES ChronoFabric Enterprise Intake and Management System"
+license = "MIT"
+
+[dependencies]
+# Core ARES dependencies
+csf-core = { path = "../csf-core" }
+csf-bus = { path = "../csf-bus" }
+csf-time = { path = "../csf-time" }
+csf-sil = { path = "../csf-sil" }
+csf-protocol = { path = "../csf-protocol" }
+csf-shared-types = { path = "../csf-shared-types" }
+
+# Web framework
+axum = "0.6"
+tower = "0.4"
+tower-http = { version = "0.6", features = ["fs", "cors", "trace"] }
+hyper = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+
+# File processing
+multipart = "0.18"
+mime = "0.3"
+tempfile = "3.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Data formats
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+csv = "1.3"
+roxmltree = "0.18"
+quick-xml = { version = "0.31", features = ["serialize"] }
+
+# Async and streaming
+futures = "0.3"
+futures-util = "0.3"
+async-stream = "0.3"
+tokio-stream = "0.1"
+
+# Database and persistence
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json"] }
+redis = { version = "0.24", features = ["tokio-comp"] }
+
+# Security
+bcrypt = "0.15"
+jsonwebtoken = "9.0"
+ring = "0.17"
+
+# Monitoring and observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+metrics = "0.21"
+prometheus = "0.13"
+
+# Utilities
+anyhow = "1.0"
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+url = "2.5"
+regex = "1.10"
+clap = { version = "4.0", features = ["derive", "env"] }
+
+[features]
+default = ["web-ui"]
+web-ui = []
+cli = []
+batch-processing = []
+real-time-streaming = []
+
+[dev-dependencies]
+tokio-test = "0.4"

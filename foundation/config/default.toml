@@ -1,0 +1,47 @@
+[system]
+worker_threads = 4
+realtime = false
+memory_pool_mb = 1024
+hardware_accel = true
+
+[bus]
+channel_buffer_size = 1024
+max_packet_size = 65536
+routing_table_size = 10000
+phase_coherence = true
+
+[clogic.drpp]
+num_variables = 64
+history_size = 1000
+update_interval_ms = 10
+use_gpu = true
+
+[clogic.adp]
+nn_layers = [128, 64, 32, 16]
+learning_rate = 0.001
+decision_timeout_ms = 50
+quantum_enabled = true
+
+[clogic.egc]
+consensus_threshold = 0.66
+max_policies = 1000
+evaluation_interval_ms = 100
+auto_rules = true
+
+[clogic.ems]
+dimensions = 8
+update_frequency = 10.0
+decay_rate = 0.95
+social_modeling = true
+
+[mlir]
+jit_enabled = true
+opt_level = 2
+backends = ["cpu", "gpu"]
+memory_pool_mb = 512
+
+[telemetry]
+metrics_enabled = true
+metrics_endpoint = "127.0.0.1:9090"
+collection_interval_ms = 1000
+tracing_enabled = true

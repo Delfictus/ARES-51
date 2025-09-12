@@ -1,0 +1,11 @@
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/openblas_build-7960bdc2ee7a88db.d: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/build.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/check.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/download.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/error.rs
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/libopenblas_build-7960bdc2ee7a88db.rlib: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/build.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/check.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/download.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/error.rs
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/libopenblas_build-7960bdc2ee7a88db.rmeta: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/build.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/check.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/download.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/error.rs
+
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/lib.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/build.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/check.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/download.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/openblas-build-0.10.12/src/error.rs:

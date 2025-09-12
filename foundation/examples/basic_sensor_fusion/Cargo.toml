@@ -1,0 +1,17 @@
+[package]
+name = "basic-sensor-fusion"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "sensor-fusion"
+path = "main.rs"
+
+[dependencies]
+csf-core = { path = "../../crates/csf-core" }
+csf-bus = { path = "../../crates/csf-bus" }
+csf-time = { path = "../../crates/csf-time" }
+tokio = { version = "1.35", features = ["full"] }
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

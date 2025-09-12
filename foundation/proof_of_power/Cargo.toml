@@ -1,0 +1,12 @@
+[package]
+name = "proof_of_power"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+
+[dependencies]
+sha2.workspace = true

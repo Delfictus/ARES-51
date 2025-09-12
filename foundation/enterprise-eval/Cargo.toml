@@ -1,0 +1,116 @@
+[package]
+name = "enterprise-eval"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ididia Serfaty <IS@delfictus.com>"]
+license = "MIT OR Apache-2.0"
+description = "Enterprise-grade Rust repository evaluation suite with parallel verification"
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.47", features = ["full"] }
+clap = { version = "4.5", features = ["derive", "env"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Git and repository handling
+git2 = "0.19"
+tempfile = "3.14"
+walkdir = "2.5"
+
+# Code analysis
+syn = { version = "2.0", features = ["full", "extra-traits", "visit"] }
+proc-macro2 = "1.0"
+quote = "1.0"
+tree-sitter = "0.24"
+tree-sitter-rust = "0.24"
+regex = "1.10"
+rayon = "1.10"
+
+# Build and dependency analysis
+cargo_metadata = "0.19"
+cargo-lock = "9.0"
+semver = "1.0"
+petgraph = "0.6"
+
+# Security and auditing
+cargo-audit = "0.21"
+rustsec = "0.30"
+
+# Testing and coverage
+cargo_tarpaulin = "0.31"
+grcov = "0.8"
+
+# Performance analysis
+criterion = "0.5"
+sysinfo = "0.32"
+
+# Documentation analysis
+pulldown-cmark = "0.12"
+url = "2.5"
+
+# Report generation
+handlebars = "6.2"
+tinytemplate = "1.2"
+comrak = "0.29"
+latex = "0.3"
+plotters = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Database for historical data
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "postgres", "chrono", "uuid"] }
+uuid = { version = "1.11", features = ["v4", "serde"] }
+
+# Parallel verification system
+dashmap = "6.1"
+crossbeam-channel = "0.5"
+parking_lot = "0.12"
+
+# Configuration
+config = "0.14"
+toml = "0.8"
+yaml-rust = "0.4"
+
+# Networking for distributed analysis
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+axum = { version = "0.7", features = ["json"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# Statistical analysis
+statrs = "0.17"
+ndarray = "0.16"
+
+# Cryptographic signatures
+ring = "0.17"
+sha2 = "0.10"
+blake3 = "1.5"
+
+# Container support
+bollard = "0.18"
+
+[dev-dependencies]
+proptest = "1.6"
+quickcheck = "1.0"
+mockall = "0.13"
+pretty_assertions = "1.4"
+tempdir = "0.3"
+
+[[bin]]
+name = "enterprise-eval"
+path = "src/main.rs"
+
+[features]
+default = ["full-analysis"]
+full-analysis = ["security", "performance", "documentation", "parallel-verification"]
+security = []
+performance = []
+documentation = []
+parallel-verification = []
+enterprise = ["full-analysis", "audit-compliance", "legal-evidence"]
+audit-compliance = []
+legal-evidence = []

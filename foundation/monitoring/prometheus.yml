@@ -1,0 +1,100 @@
+# ARES ChronoSynclastic Fabric - Production Prometheus Configuration
+# Validates sub-microsecond latency and >1M messages/sec throughput claims
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    system: 'ares-csf'
+    environment: 'production'
+
+rule_files:
+  - "alerts/csf-alerts.yml"
+  - "alerts/success-metrics-rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # ARES CSF Core Components - High-frequency monitoring for critical metrics
+  - job_name: 'csf-runtime'
+    static_configs:
+      - targets: ['localhost:8080']
+    scrape_interval: 5s
+    metrics_path: /metrics
+    scheme: http
+
+  - job_name: 'csf-bus-metrics'
+    static_configs:
+      - targets: ['localhost:8081']
+    scrape_interval: 1s  # High-frequency for sub-microsecond latency validation
+    metrics_path: /bus/metrics
+    scheme: http
+
+  - job_name: 'csf-time-metrics'
+    static_configs:
+      - targets: ['localhost:8082']
+    scrape_interval: 1s  # Critical for temporal coherence monitoring
+    metrics_path: /time/metrics
+    scheme: http
+
+  - job_name: 'csf-quantum-oracle'
+    static_configs:
+      - targets: ['localhost:8083']
+    scrape_interval: 2s
+    metrics_path: /quantum/metrics
+    scheme: http
+
+  - job_name: 'csf-network-nodes'
+    static_configs:
+      - targets: ['localhost:8084', 'localhost:8085', 'localhost:8086']
+    scrape_interval: 2s
+    metrics_path: /network/metrics
+    scheme: http
+
+  - job_name: 'csf-telemetry-aggregator'
+    static_configs:
+      - targets: ['localhost:8087']
+    scrape_interval: 5s
+    metrics_path: /telemetry/metrics
+    scheme: http
+
+  # Kubernetes service discovery (when deployed in k8s)
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+  # Node exporter (for system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets:
+        - node-exporter:9100
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

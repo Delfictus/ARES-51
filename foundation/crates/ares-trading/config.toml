@@ -1,0 +1,89 @@
+# ARES Trading System Configuration
+# Select and configure your preferred market data provider
+
+[trading]
+# Trading engine configuration
+initial_balance = 100000.0
+max_position_size = 0.1  # 10% of portfolio per position
+stop_loss_percent = 2.0
+take_profit_percent = 5.0
+max_open_positions = 10
+
+# Technical analysis parameters
+rsi_period = 14
+rsi_oversold = 30
+rsi_overbought = 70
+sma_short_period = 20
+sma_long_period = 50
+momentum_period = 10
+
+[market_data]
+# Select your provider: 
+# "yahoo_finance" - FREE, no API key required
+# "polygon_io" - Professional data, API key required
+# "iex_cloud" - Professional data, API key required  
+# "binance" - Cryptocurrency, FREE
+# "finnhub" - Real-time data, API key required
+# "twelve_data" - Technical indicators, API key required
+provider = "yahoo_finance"
+
+# API keys (get from provider websites)
+# polygon_api_key = "YOUR_POLYGON_API_KEY"
+# iex_api_token = "YOUR_IEX_TOKEN"  
+# finnhub_api_key = "YOUR_FINNHUB_KEY"
+# twelve_data_api_key = "YOUR_TWELVE_DATA_KEY"
+
+# Rate limiting
+rate_limit_per_minute = 60
+enable_websocket = false
+
+# Default symbols to monitor
+[[symbols]]
+symbol = "AAPL"
+asset_type = "stock"
+
+[[symbols]]
+symbol = "GOOGL"
+asset_type = "stock"
+
+[[symbols]]
+symbol = "MSFT"
+asset_type = "stock"
+
+[[symbols]]
+symbol = "TSLA"
+asset_type = "stock"
+
+[[symbols]]
+symbol = "AMZN"
+asset_type = "stock"
+
+# Cryptocurrency symbols (for Binance provider)
+# [[symbols]]
+# symbol = "BTC-USD"
+# asset_type = "crypto"
+
+# [[symbols]]
+# symbol = "ETH-USD"
+# asset_type = "crypto"
+
+[logging]
+level = "info"
+file = "trading.log"
+
+[database]
+# SQLite database for trade history
+path = "trading.db"
+
+[risk_management]
+# Risk management parameters
+max_daily_loss = 1000.0
+max_drawdown = 0.2  # 20%
+position_sizing = "kelly"  # "fixed", "kelly", or "risk_parity"
+
+[notifications]
+# Optional: Configure alerts
+enable_email = false
+email_address = ""
+enable_discord = false
+discord_webhook = ""

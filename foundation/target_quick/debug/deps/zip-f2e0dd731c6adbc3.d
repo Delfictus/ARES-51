@@ -1,0 +1,20 @@
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/zip-f2e0dd731c6adbc3.d: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/compression.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/cp437.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/crc32.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/extra_fields/mod.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/extra_fields/extended_timestamp.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/read.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/read/stream.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/result.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/spec.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/types.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/write.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/zipcrypto.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/unstable.rs
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/libzip-f2e0dd731c6adbc3.rmeta: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/compression.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/cp437.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/crc32.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/extra_fields/mod.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/extra_fields/extended_timestamp.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/read.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/read/stream.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/result.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/spec.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/types.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/write.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/zipcrypto.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/unstable.rs
+
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/lib.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/compression.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/cp437.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/crc32.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/extra_fields/mod.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/extra_fields/extended_timestamp.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/read.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/read/stream.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/result.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/spec.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/types.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/write.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/zipcrypto.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-1.1.4/src/unstable.rs:
+
+# env-dep:CARGO_PKG_VERSION=1.1.4

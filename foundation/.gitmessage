@@ -1,0 +1,28 @@
+# Commit Template for ARES ChronoFabric Project
+#
+# Please follow this format for consistent commit messages:
+#
+# <type>: <subject>
+#
+# <body>
+#
+# Types: feat, fix, docs, style, refactor, test, chore, perf, build
+#
+# Guidelines:
+# - Use imperative mood in subject line
+# - Keep subject line under 50 characters
+# - Separate subject from body with blank line  
+# - Wrap body at 72 characters
+# - Focus on what and why, not how
+#
+# Examples:
+# feat: Add quantum temporal correlation engine
+# fix: Resolve circular dependency between core and time modules
+# docs: Update API documentation for phase packet system
+#
+# Do not include:
+# - References to AI assistance
+# - External authorship attributions
+# - Automated generation notices
+#
+# All commits are authored by: Ididia Serfaty

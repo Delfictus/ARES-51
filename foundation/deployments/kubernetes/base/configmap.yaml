@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ares-csf-config
+  labels:
+    app: ares-csf
+data:
+  config.toml: |
+    [node]
+    node_id = "${CSF_NODE_ID}"
+    deployment_mode = "production"
+    
+    [node.resource_limits]
+    max_memory_gb = 8
+    max_cpu_cores = 4
+    
+    [scheduler]
+    scheduler_cores = [0, 1, 2, 3]
+    max_tasks = 10000
+    scheduling_horizon_ms = 100
+    memory_pool_size = 2147483648  # 2GB
+    enable_deadline_monitoring = true
+    
+    [drpp]
+    num_oscillators = 2048
+    integration_timestep = 0.001
+    integration_steps = 100
+    pattern_threshold = 0.7
+    use_neuromorphic = false
+    
+    [drpp.te_config]
+    tau = 5
+    history_length = 10
+    num_bins = 50
+    knn_k = 5
+    use_gpu = false
+    
+    [adp]
+    num_neurons = 2048
+    neural_timestep = 0.0001
+    evolution_steps = 1000
+    use_neuromorphic = false
+    encoding_dimension = 128
+    
+    [egc]
+    verification_interval_ms = 50
+    robustness_threshold = 0.0
+    enable_predictive_verification = true
+    
+    [ems]
+    urgency_tau = 1.0
+    stress_decay = 0.1
+    critical_stress_threshold = 0.85
+    max_volatility = 0.5
+    
+    [sil]
+    blockchain_enabled = false
+    encryption_enabled = true
+    audit_retention_days = 30
+    consensus_nodes = []
+    
+    [bus]
+    channel_capacity = 10000
+    
+    [network]
+    listen_addr = "0.0.0.0:9000"
+    enable_tcp_fallback = false
+    enable_encryption = true
+    gossip_interval_ms = 1000
+    peer_discovery = "kubernetes"
+    kubernetes_namespace = "${CSF_NAMESPACE}"
+    kubernetes_service = "ares-csf-headless"
+    
+    [telemetry]
+    enable_metrics = true
+    metrics_port = 9090
+    enable_tracing = true
+    tracing_endpoint = "http://jaeger-collector.monitoring:4317"
+    log_level = "${RUST_LOG}"

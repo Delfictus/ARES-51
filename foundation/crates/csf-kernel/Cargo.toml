@@ -1,0 +1,60 @@
+[package]
+name = "csf-kernel"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Chronos Kernel and Temporal Task Weaver for ARES CSF"
+
+[dependencies]
+# Core dependencies
+csf-core = { path = "../csf-core", features = ["net"] }
+csf-time = { path = "../csf-time" }
+
+# System programming
+libc = { workspace = true }
+nix = "0.27"
+mio = "0.8"
+
+# Data structures
+parking_lot = { workspace = true }
+crossbeam = { workspace = true }
+dashmap = { workspace = true }
+
+# Async runtime (minimal)
+tokio = { workspace = true, features = ["rt", "sync", "time"] }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+log = { workspace = true }
+tracing = { workspace = true }
+
+# Metrics
+prometheus = { workspace = true }
+
+# CPU affinity
+core_affinity = "0.8"
+
+# Priority queue
+priority-queue = "1.3"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+caps = "0.5"
+
+[dev-dependencies]
+csf-time = { path = "../csf-time", features = ["testing"] }
+criterion = { workspace = true }
+
+[build-dependencies]
+cc = { workspace = true }
+
+[[bench]]
+name = "scheduler"
+harness = false
+path = "benches/scheduler.rs"

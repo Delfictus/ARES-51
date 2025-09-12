@@ -1,0 +1,12 @@
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/gemm_common-754f25d798febed4.d: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/cache.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gemm.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gemv.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gevv.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/microkernel.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/pack_operands.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/simd.rs
+
+/home/diddy/dev/ares-monorepo/target_quick/debug/deps/libgemm_common-754f25d798febed4.rmeta: /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/lib.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/cache.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gemm.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gemv.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gevv.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/microkernel.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/pack_operands.rs /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/simd.rs
+
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/lib.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/cache.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gemm.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gemv.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/gevv.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/microkernel.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/pack_operands.rs:
+/home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gemm-common-0.17.1/src/simd.rs:

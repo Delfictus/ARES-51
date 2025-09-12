@@ -1,0 +1,99 @@
+[package]
+name = "ares-neuromorphic-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ididia Serfaty <ididiaserfaty@protonmail.com>"]
+description = "ARES Neuromorphic Command Line Interface with Natural Language Processing"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/1onlyadvance/CSF"
+readme = "README.md"
+keywords = ["cli", "neuromorphic", "natural-language", "ares", "quantum"]
+categories = ["command-line-utilities", "science"]
+
+[[bin]]
+name = "ares"
+path = "src/main.rs"
+
+[dependencies]
+# Core CLI framework
+clap = { version = "4.5", features = ["derive", "env", "color", "suggestions"] }
+
+# Async runtime
+tokio = { version = "1.37", features = ["full"] }
+
+# Error handling and logging
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Terminal UI and interaction
+colored = "2.1"
+indicatif = "0.17"
+dialoguer = "0.11"
+console = "0.15"
+
+# Signal handling
+ctrlc = "3.4"
+signal-hook = "0.3"
+
+# Serialization and configuration
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Python interop for Brian2/Lava (match csf-ffi version)
+pyo3 = { version = "0.24", features = ["auto-initialize"] }
+numpy = "0.24"
+
+# Filesystem utilities
+dirs = "5.0"
+walkdir = "2.5"
+
+# User experience
+human-panic = "2.0"
+is-terminal = "0.4"
+
+# ARES crates dependencies
+csf-core = { path = "../csf-core" }
+csf-clogic = { path = "../csf-clogic" }
+csf-hardware = { path = "../csf-hardware", features = ["neuromorphic"] }
+csf-bus = { path = "../csf-bus" }
+csf-telemetry = { path = "../csf-telemetry" }
+
+# Neuromorphic simulation
+ndarray = "0.15"
+parking_lot = "0.12"
+rand = "0.8"
+num_cpus = "1.16"
+
+# Additional utilities
+chrono = { version = "0.4", features = ["serde"] }
+sysinfo = "0.31"
+
+# Python dependencies will be managed via pip/conda:
+# brian2>=2.5.1
+# brian2cuda>=1.0a1 (for GPU acceleration)
+# lava-dl>=0.5.1
+# numpy>=1.21.0
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.10"
+tokio-test = "0.4"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+
+[features]
+default = ["native-only", "hardware-detection"]
+brian2 = []
+lava = []
+gpu-acceleration = []
+hardware-detection = []
+status-only = []
+native-only = []
+python-bridge = []
+
+[[bench]]
+name = "neuromorphic_benchmarks"
+harness = false

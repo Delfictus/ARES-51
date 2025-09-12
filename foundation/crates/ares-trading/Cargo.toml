@@ -1,0 +1,60 @@
+[package]
+name = "ares-trading"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Paper trading system using Dynamic Resonance Phase Processing for market analysis"
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.47", features = ["full"] }
+async-trait = "0.1"
+anyhow = "1.0"
+thiserror = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+clap = { version = "4.4", features = ["derive"] }
+
+# Market data
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+rust_decimal = "1.36"
+rust_decimal_macros = "1.36"
+
+# Database (temporarily disabled)
+# sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "rust_decimal"] }
+
+# ARES integration (temporarily disabled for standalone testing)
+# hephaestus-forge = { path = "../hephaestus-forge" }
+# csf-core = { path = "../csf-core" }
+# csf-time = { path = "../csf-time" }
+# csf-shared-types = { path = "../csf-shared-types" }
+
+# Math
+nalgebra = "0.33"
+num-complex = "0.4"
+statrs = "0.17"
+rustfft = "6.2"
+rand = "0.8"
+
+# Monitoring
+prometheus = { version = "0.13", features = ["process"] }
+hyper = { version = "0.14", features = ["server", "http1", "http2"] }
+
+# Other
+uuid = { version = "1.11", features = ["v4", "serde"] }
+
+[[bin]]
+name = "paper-trader"
+path = "src/main.rs"
+
+[[bin]]
+name = "market-demo"
+path = "src/demo_main.rs"

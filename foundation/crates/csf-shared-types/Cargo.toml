@@ -1,0 +1,19 @@
+[package]
+name = "csf-shared-types"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Shared types for ARES ChronoFabric - breaks circular dependencies"
+
+[dependencies]
+serde = { version = "1.0.197", features = ["derive"] }
+uuid = { version = "1.8.0", features = ["v4", "serde"] }
+thiserror = "1.0.58"
+rand = "0.8"
+
+[features]
+default = []

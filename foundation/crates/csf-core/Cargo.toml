@@ -1,0 +1,111 @@
+[package]
+name = "csf-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+
+[dependencies]
+csf-time = { path = "../csf-time" }
+# Protocol layer - canonical packet definitions
+csf-protocol = { path = "../csf-protocol" }
+# Quantum and network demos use simplified implementations to avoid circular dependencies
+
+bytes = { version = "1.6", features = ["serde"] }
+thiserror = "1.0.58"
+tracing = "0.1.40"
+serde = { version = "1.0.197", features = ["derive"] }
+uuid = { version = "1.8.0", features = ["v4", "serde"] }
+async-trait = "0.1.79"
+chrono = { version = "0.4.38", features = ["serde"] }
+rand = "0.8"
+proptest = { version = "1.4.0", optional = true }
+proptest-derive = { version = "0.4.0", optional = true }
+
+# Tensor operations and linear algebra - PhD quality implementations
+nalgebra = { version = "0.33", features = ["serde-serialize"] }
+ndarray = { version = "0.16", features = ["serde"] }
+num-traits = "0.2"
+num-complex = "0.4"
+
+# LAPACK/BLAS bindings for enterprise-grade linear algebra
+lapack = "0.19"
+blas = "0.22"
+lapack-src = { version = "0.10", features = ["openblas"] }
+anyhow = "1.0"
+
+# High-performance serialization
+bincode = "1.3.3"
+serde_json = "1.0"
+
+# Async runtime for integration framework
+tokio = { version = "1.0", features = ["full"] }
+
+# High-performance parallel computing
+rayon = "1.8"
+
+# Iterator utilities
+itertools = "0.12"
+
+# GPU acceleration (optional)
+cudarc = { version = "0.11", optional = true }
+wgpu = { version = "0.19", optional = true }
+
+# SIMD acceleration
+wide = "0.7"
+simba = "0.8"
+
+# Memory mapping and zero-copy
+memmap2 = "0.9"
+bytemuck = { version = "1.14", features = ["derive"] }
+
+# High-performance streaming
+crossbeam-channel = "0.5"
+flume = "0.11"
+
+# Profiling and monitoring
+pprof = { version = "0.13", features = ["flamegraph"], optional = true }
+tracy-client = { version = "0.17", optional = true }
+
+# Compression for data streaming
+lz4 = "1.24"
+zstd = "0.13"
+
+# HTTP client for historical data fetching
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+futures = "0.3"
+
+# System information
+num_cpus = "1.16"
+sysinfo = "0.30"
+
+# Shared types (breaks circular dependencies)  
+csf-shared-types = { path = "../csf-shared-types" }
+
+[features]
+default = ["net", "simd"]
+net = []
+proptest = ["dep:proptest", "dep:proptest-derive"]
+
+# High-performance computing features
+simd = []
+gpu = ["dep:cudarc", "dep:wgpu"]
+cuda = ["dep:cudarc", "gpu"]
+profiling = ["dep:pprof", "dep:tracy-client"]
+streaming = []
+
+[dev-dependencies]
+csf-time = { path = "../csf-time", features = ["testing"] }
+bincode = "1.3.3"
+proptest = { version = "1.4.0" }
+proptest-derive = { version = "0.4.0" }
+serde_json = "1.0"
+criterion = { version = "0.5.1", features = ["html_reports"] }
+csf-shared-types = { path = "../csf-shared-types" }
+
+[[bench]]
+name = "phase_1_2_benchmarks"
+harness = false

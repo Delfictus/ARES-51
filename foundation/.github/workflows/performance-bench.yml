@@ -1,0 +1,229 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [ opened, synchronize, labeled ]
+  schedule:
+    # Run at 3 AM UTC every day
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      comparison_branch:
+        description: 'Branch to compare against'
+        required: false
+        default: 'main'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUSTFLAGS: "-C target-cpu=native"
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'benchmark')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            linux-tools-generic \
+            linux-tools-$(uname -r) \
+            valgrind \
+            massif-visualizer
+          # Enable performance counters
+          sudo sh -c 'echo 1 > /proc/sys/kernel/perf_event_paranoid'
+          
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        
+      - name: Install benchmarking tools
+        run: |
+          cargo install cargo-criterion
+          cargo install cargo-flamegraph
+          cargo install critcmp
+          
+      - name: Checkout comparison branch
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}:base
+          
+      - name: Run benchmarks on base branch
+        if: github.event_name == 'pull_request'
+        run: |
+          git checkout base
+          cargo criterion --all-features --message-format json > base-criterion.json
+          
+      - name: Checkout PR branch
+        if: github.event_name == 'pull_request'
+        run: |
+          git checkout ${{ github.head_ref }}
+          
+      - name: Run benchmarks
+        run: |
+          cargo criterion --all-features --message-format json > criterion.json
+          
+      - name: Compare benchmarks
+        if: github.event_name == 'pull_request'
+        run: |
+          critcmp base-criterion.json criterion.json > comparison.txt
+          cat comparison.txt
+          
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: |
+            criterion.json
+            target/criterion/
+            comparison.txt
+            
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const comparison = fs.readFileSync('comparison.txt', 'utf8');
+            const body = `## Benchmark Results\n\n\`\`\`\n${comparison}\n\`\`\``;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  profile:
+    name: Performance Profiling
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install profiling tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y linux-tools-generic valgrind heaptrack
+          cargo install flamegraph
+          cargo install cargo-profiling
+          
+      - name: Build release binary
+        run: cargo build --release --all-features
+        
+      - name: Generate flamegraph
+        run: |
+          cargo flamegraph --root --bin ares-csf -- --config config/bench.toml &
+          sleep 30
+          pkill -SIGTERM ares-csf
+          
+      - name: Run heaptrack
+        run: |
+          heaptrack ./target/release/ares-csf --config config/bench.toml &
+          PID=$!
+          sleep 30
+          kill -SIGTERM $PID
+          wait $PID || true
+          heaptrack_print heaptrack.ares-csf.*.gz > heaptrack-report.txt
+          
+      - name: Upload profiling results
+        uses: actions/upload-artifact@v3
+        with:
+          name: profiling-results
+          path: |
+            flamegraph.svg
+            heaptrack-report.txt
+            perf.data
+
+  stress-test:
+    name: Stress Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Build release binary
+        run: cargo build --release --all-features
+        
+      - name: Run packet throughput test
+        run: |
+          ./scripts/stress-test.sh throughput
+          
+      - name: Run latency test
+        run: |
+          ./scripts/stress-test.sh latency
+          
+      - name: Run memory stress test
+        run: |
+          ./scripts/stress-test.sh memory
+          
+      - name: Upload stress test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: stress-test-results
+          path: stress-test-results/
+
+  regression-detection:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Run benchmarks
+        run: cargo bench --all-features
+        
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: CSF Performance
+          tool: 'cargo'
+          output-file-path: target/criterion/estimates.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: '110%'
+          comment-on-alert: true
+          fail-on-alert: true
+          alert-comment-cc-users: '@ares-systems/performance'
+
+  hardware-specific:
+    name: Hardware-Specific Benchmarks
+    runs-on: [self-hosted, gpu]
+    if: github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'gpu-benchmark')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: CUDA benchmarks
+        run: |
+          cargo bench --features cuda --bench cuda_kernels
+          
+      - name: Neuromorphic benchmarks
+        run: |
+          cargo bench --features neuromorphic --bench loihi_performance
+          
+      - name: Multi-GPU scaling
+        run: |
+          cargo bench --features multi-gpu --bench gpu_scaling
+          
+      - name: Upload hardware benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: hardware-benchmark-results
+          path: target/criterion/

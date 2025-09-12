@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ares-csf-prod
+
+bases:
+- ../../base
+
+patchesStrategicMerge:
+- deployment-patch.yaml
+- service-patch.yaml
+
+configMapGenerator:
+- name: ares-csf-config
+  behavior: merge
+  files:
+  - config.toml=config-prod.toml
+
+secretGenerator:
+- name: ares-csf-secrets
+  envs:
+  - secrets.env
+
+replicas:
+- name: ares-csf
+  count: 5
+
+images:
+- name: aressystems/csf
+  newTag: v0.1.0

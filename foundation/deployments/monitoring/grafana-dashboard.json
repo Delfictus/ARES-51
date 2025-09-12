@@ -1,0 +1,502 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "ARES ChronoFabric Enterprise Dashboard",
+    "tags": ["ares", "chronofabric", "enterprise", "quantum"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "schemaVersion": 30,
+    "version": 1,
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(up, environment)",
+          "current": {
+            "value": "production",
+            "text": "production"
+          },
+          "options": [],
+          "includeAll": false,
+          "multi": false
+        },
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(up{environment=\"$environment\"}, instance)",
+          "current": {
+            "value": "All",
+            "text": "All"
+          },
+          "options": [],
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Executive KPI Overview",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "business_sla_compliance_score",
+            "legendFormat": "SLA Compliance (%)",
+            "refId": "A"
+          },
+          {
+            "expr": "business_revenue_per_operation * 1000",
+            "legendFormat": "Revenue per Op (m$)",
+            "refId": "B"
+          },
+          {
+            "expr": "user_satisfaction_score",
+            "legendFormat": "Customer Satisfaction",
+            "refId": "C"
+          },
+          {
+            "expr": "system:availability:rate24h",
+            "legendFormat": "System Availability (%)",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 85},
+                {"color": "green", "value": 95}
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Revenue per Op (m$)"},
+              "properties": [
+                {"id": "unit", "value": "currencyUSD"},
+                {"id": "decimals", "value": 3}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "title": "Quantum Operations Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "quantum_coherence_ratio",
+            "legendFormat": "Coherence Ratio",
+            "refId": "A"
+          },
+          {
+            "expr": "quantum_gate_fidelity",
+            "legendFormat": "Gate Fidelity",
+            "refId": "B"
+          },
+          {
+            "expr": "quantum_entanglement_entropy / 10",
+            "legendFormat": "Entanglement Entropy (normalized)",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "opacity"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "visible",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Latency SLA Compliance",
+        "type": "heatmap",
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(sla_latency_p95_bucket[5m]))",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(sla_latency_p95_bucket[5m]))",
+            "legendFormat": "P95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(sla_latency_p95_bucket[5m]))",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            }
+          }
+        },
+        "options": {
+          "calculate": false,
+          "yAxis": {
+            "unit": "s",
+            "min": "0",
+            "max": "0.01"
+          },
+          "color": {
+            "mode": "spectrum",
+            "scheme": "Spectral",
+            "exponent": 0.5,
+            "steps": 64
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Security & Compliance Scores",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 17},
+        "targets": [
+          {
+            "expr": "compliance_soc2_score",
+            "legendFormat": "SOC 2 Compliance",
+            "refId": "A"
+          },
+          {
+            "expr": "compliance_iso27001_score",
+            "legendFormat": "ISO 27001 Compliance",
+            "refId": "B"
+          },
+          {
+            "expr": "security_scan_score",
+            "legendFormat": "Security Scan Score",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 75},
+                {"color": "green", "value": 90}
+              ]
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        }
+      },
+      {
+        "id": 5,
+        "title": "Cost Efficiency Metrics",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 17},
+        "targets": [
+          {
+            "expr": "cost_efficiency_ratio * 100",
+            "legendFormat": "Cost Efficiency (%)",
+            "refId": "A"
+          },
+          {
+            "expr": "100 - resource_waste_percentage",
+            "legendFormat": "Resource Utilization (%)",
+            "refId": "B"
+          },
+          {
+            "expr": "energy_efficiency_ratio * 100",
+            "legendFormat": "Energy Efficiency (%)",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 20
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Infrastructure Health",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 17},
+        "targets": [
+          {
+            "expr": "infrastructure:cpu:avg5m",
+            "legendFormat": "CPU Usage (%)",
+            "refId": "A"
+          },
+          {
+            "expr": "infrastructure:memory:avg5m",
+            "legendFormat": "Memory Usage (GB)",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(system_network_bytes_total[5m]) / 1024 / 1024",
+            "legendFormat": "Network Throughput (MB/s)",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 1,
+              "fillOpacity": 10
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byRegexp", "options": "CPU.*"},
+              "properties": [
+                {"id": "unit", "value": "percent"},
+                {"id": "max", "value": 100}
+              ]
+            },
+            {
+              "matcher": {"id": "byRegexp", "options": "Memory.*"},
+              "properties": [
+                {"id": "unit", "value": "decgbytes"}
+              ]
+            },
+            {
+              "matcher": {"id": "byRegexp", "options": "Network.*"},
+              "properties": [
+                {"id": "unit", "value": "MBs"}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "title": "Alert Status Summary",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 25},
+        "targets": [
+          {
+            "expr": "ALERTS{alertstate=\"firing\"}",
+            "legendFormat": "{{alertname}} - {{severity}}",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "severity"},
+              "properties": [
+                {
+                  "id": "custom.cellOptions",
+                  "value": {
+                    "type": "color-background",
+                    "mode": "basic"
+                  }
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    {"options": {"emergency": {"color": "red"}}, "type": "value"},
+                    {"options": {"critical": {"color": "orange"}}, "type": "value"},
+                    {"options": {"warning": {"color": "yellow"}}, "type": "value"},
+                    {"options": {"info": {"color": "green"}}, "type": "value"}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "severity"
+            }
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "title": "Throughput vs SLA Target",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 25},
+        "targets": [
+          {
+            "expr": "system:throughput:rate5m",
+            "legendFormat": "Current Throughput",
+            "refId": "A"
+          },
+          {
+            "expr": "vector(1000000)",
+            "legendFormat": "SLA Target (1M ops/sec)",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byRegexp", "options": "SLA Target.*"},
+              "properties": [
+                {"id": "custom.lineStyle", "value": {"dash": [10, 10], "fill": "dash"}},
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "title": "Business Impact Heatmap",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 33},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(business_event_impact_bucket[5m]))",
+            "legendFormat": "Business Impact Distribution",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            }
+          }
+        },
+        "options": {
+          "calculate": false,
+          "color": {
+            "mode": "spectrum",
+            "scheme": "RdYlGn",
+            "reverse": true,
+            "exponent": 0.5,
+            "steps": 64
+          },
+          "yAxis": {
+            "unit": "short",
+            "decimals": 0,
+            "min": "0",
+            "max": "4"
+          }
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "changes(prometheus_build_info[1h]) > 0",
+          "iconColor": "blue",
+          "titleFormat": "Deployment",
+          "textFormat": "System deployment detected"
+        },
+        {
+          "name": "Critical Alerts",
+          "datasource": "prometheus", 
+          "enable": true,
+          "expr": "ALERTS{severity=\"critical\",alertstate=\"firing\"}",
+          "iconColor": "red",
+          "titleFormat": "Critical Alert: {{alertname}}",
+          "textFormat": "{{annotations.summary}}"
+        }
+      ]
+    },
+    "links": [
+      {
+        "title": "ARES ChronoFabric Documentation",
+        "url": "https://docs.ares-systems.com/chronofabric",
+        "type": "link",
+        "icon": "doc",
+        "tooltip": "Access system documentation"
+      },
+      {
+        "title": "Incident Response Playbook",
+        "url": "https://docs.ares-systems.com/incident-response",
+        "type": "link",
+        "icon": "bolt",
+        "tooltip": "Emergency response procedures"
+      },
+      {
+        "title": "Quantum Operations Runbook", 
+        "url": "https://docs.ares-systems.com/runbooks/quantum",
+        "type": "link",
+        "icon": "question",
+        "tooltip": "Quantum operations troubleshooting"
+      }
+    ]
+  }
+}

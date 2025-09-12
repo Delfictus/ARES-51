@@ -1,0 +1,364 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "csf-proof-of-power",
+    "title": "ARES CSF - Proof of Power Dashboard",
+    "description": "Mission-critical metrics validating $650M-$1.1B valuation claims",
+    "tags": ["ares-csf", "quantum-temporal", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "🎯 CRITICAL KPI: Sub-Microsecond Latency",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(csf_time_source_query_duration_ns_bucket[1m]))",
+            "legendFormat": "95th Percentile",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ns",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 800},
+                {"color": "red", "value": 1000}
+              ]
+            },
+            "custom": {
+              "displayMode": "lcd",
+              "orientation": "horizontal"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "🚀 CRITICAL KPI: >1M Messages/Sec Throughput",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(csf_bus_messages_processed_total[1m])",
+            "legendFormat": "Messages/Sec",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 800000},
+                {"color": "green", "value": 1000000}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "⚠️ MISSION CRITICAL: Zero Causality Violations",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(csf_causality_violations_total[5m])",
+            "legendFormat": "Violations (5m)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "red", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "🔒 P0 SECURITY: Memory Safety Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(csf_memory_violations_total[1m])",
+            "legendFormat": "Violations (1m)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "red", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "⚡ Sub-Microsecond Latency Distribution",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(csf_time_source_query_duration_ns_bucket[1m]))",
+            "legendFormat": "50th Percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(csf_time_source_query_duration_ns_bucket[1m]))",
+            "legendFormat": "95th Percentile",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(csf_time_source_query_duration_ns_bucket[1m]))",
+            "legendFormat": "99th Percentile",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "ns",
+            "max": 2000,
+            "label": "Latency (nanoseconds)"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "query": {"params": ["B", "1m", "now"]},
+              "reducer": {"params": [], "type": "last"},
+              "evaluator": {"params": [1000], "type": "gt"}
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "10s",
+          "frequency": "5s",
+          "handler": 1,
+          "name": "Sub-microsecond latency violation",
+          "noDataState": "no_data"
+        },
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "💎 Quantum-Temporal Performance Matrix",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(csf_bus_messages_processed_total[1m])",
+            "legendFormat": "PCB Throughput",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(csf_time_operations_total[1m])",
+            "legendFormat": "Time Operations",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(csf_quantum_oracle_duration_ns[1m])",
+            "legendFormat": "Quantum Oracle Rate",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "ops",
+            "label": "Operations per Second"
+          }
+        ],
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 7,
+        "title": "🧠 Neuromorphic Integration Health",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "csf_clogic_accuracy_ratio",
+            "legendFormat": "C-LOGIC Accuracy",
+            "refId": "A"
+          },
+          {
+            "expr": "csf_drpp_detection_accuracy", 
+            "legendFormat": "DRPP Detection Accuracy",
+            "refId": "B"
+          },
+          {
+            "expr": "csf_ems_modeling_accuracy",
+            "legendFormat": "EMS Modeling Accuracy",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percentunit",
+            "min": 0.8,
+            "max": 1.0,
+            "label": "Accuracy Ratio"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 17}
+      },
+      {
+        "id": 8,
+        "title": "⚙️ Hardware Acceleration Efficiency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "csf_gpu_utilization_percent",
+            "legendFormat": "GPU Utilization",
+            "refId": "A"
+          },
+          {
+            "expr": "csf_mlir_backend_efficiency_ratio * 100",
+            "legendFormat": "MLIR Backend Efficiency",
+            "refId": "B"
+          },
+          {
+            "expr": "csf_data_transfer_efficiency_ratio * 100", 
+            "legendFormat": "Data Transfer Efficiency",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "label": "Efficiency %"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 17}
+      },
+      {
+        "id": 9,
+        "title": "📊 Investor Validation Metrics",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "csf:latency_p95_1m",
+            "legendFormat": "Latency P95 (ns)",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "csf:throughput_1m", 
+            "legendFormat": "Throughput (msg/s)",
+            "refId": "B",
+            "format": "table"
+          },
+          {
+            "expr": "csf:uptime_availability_24h * 100",
+            "legendFormat": "Uptime %",
+            "refId": "C", 
+            "format": "table"
+          },
+          {
+            "expr": "csf:temporal_coherence_success_rate_1h * 100",
+            "legendFormat": "Temporal Coherence %",
+            "refId": "D",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {},
+              "renameByName": {}
+            }
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 25}
+      },
+      {
+        "id": 10,
+        "title": "🎯 Market Validation Success Criteria",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "vector(1) * (csf:latency_p95_1m < 1000)",
+            "legendFormat": "Sub-μs Latency ✓",
+            "refId": "A"
+          },
+          {
+            "expr": "vector(1) * (csf:throughput_1m > 1000000)",
+            "legendFormat": ">1M msg/s ✓",
+            "refId": "B"
+          },
+          {
+            "expr": "vector(1) * (increase(csf_causality_violations_total[24h]) == 0)",
+            "legendFormat": "Zero Causality Violations ✓",
+            "refId": "C"
+          },
+          {
+            "expr": "vector(1) * (csf:uptime_availability_24h > 0.9999)",
+            "legendFormat": "99.99% Uptime ✓",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "mappings": [
+              {"options": {"0": {"text": "FAIL"}}, "type": "value"},
+              {"options": {"1": {"text": "PASS"}}, "type": "value"}
+            ]
+          }
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 33}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": false,
+    "style": "dark",
+    "templating": {
+      "list": []
+    },
+    "timepicker": {}
+  }
+}

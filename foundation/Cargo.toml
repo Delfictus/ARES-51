@@ -1,0 +1,144 @@
+[workspace]
+members = [
+    ".",
+    "crates/csf-shared-types",
+    "crates/csf-protocol",
+    "crates/csf-core",
+    "crates/csf-bus",
+    "crates/csf-kernel",
+    "crates/csf-telemetry",
+    "crates/csf-time",
+    "crates/csf-sil",
+    "crates/csf-network",
+    "crates/csf-ffi",
+    "crates/csf-hardware",
+    "crates/csf-runtime",
+    "crates/csf-clogic",
+    "crates/csf-mlir",
+    "crates/csf-quantum",
+    "crates/ares-neuromorphic-cli",
+    "crates/hephaestus-forge", "crates/ares-trading", "proof_of_power",
+    "neuromorphic-trading",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["ARES Team"]
+license = "Proprietary"
+repository = "https://github.com/ares-systems/chronofabric"
+homepage = "https://github.com/ares-systems/chronofabric"
+documentation = "https://github.com/ares-systems/chronofabric"
+
+[package]
+name = "chronofabric"
+version = "0.1.0"
+edition = "2021"
+authors = ["ARES Team"]
+license = "Proprietary"
+repository = "https://github.com/ares-systems/chronofabric"
+homepage = "https://github.com/ares-systems/chronofabric"
+documentation = "https://github.com/ares-systems/chronofabric"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde.workspace = true
+toml.workspace = true
+num_cpus.workspace = true
+
+# Local workspace crates
+"csf-bus" = { path = "crates/csf-bus" }
+"csf-core" = { path = "crates/csf-core" }
+"csf-time" = { path = "crates/csf-time" }
+"csf-kernel" = { path = "crates/csf-kernel" }
+"csf-telemetry" = { path = "crates/csf-telemetry" }
+futures = { workspace = true, features = ["std"] }
+"hephaestus-forge" = { path = "crates/hephaestus-forge" }
+oorandom = "11"
+chrono.workspace = true
+fastrand = "2"
+serde_json.workspace = true
+
+[[test]]
+name = "integration_test"
+path = "tests/integration_test.rs"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[workspace.dependencies]
+memmap2 = "0.9.0"
+# Core system libraries
+libc = "0.2.153"
+tokio = { version = "1.35.1", features = ["full", "rt-multi-thread", "tracing", "signal"] }
+async-trait = "0.1.77"
+futures = "0.3.30"
+serde = { version = "1.0.195", features = ["derive", "rc"] }
+anyhow = "1.0.79"
+thiserror = "1.0.56"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json", "registry"] }
+clap = { version = "4.4.18", features = ["derive", "env", "unicode"] }
+num_cpus = "1.16.0"
+toml = "0.8.8"
+# Serialization
+bincode = "1.3.3"
+zerocopy = "0.7"
+serde_json = "1.0"
+# Data handling
+bytes = "1.5.0"
+uuid = { version = "1.6.1", features = ["v4"] }
+dashmap = "5.5"
+cc = "1.0"
+# Time
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+# Concurrency and synchronization
+parking_lot = "0.12"
+crossbeam = "0.8"
+rayon = "1.8"
+# Logging
+log = "0.4"
+# Cryptography and hashing
+blake3 = "1.5"
+ed25519-dalek = { version = "2", features = ["serde"] }
+x25519-dalek = "2"
+ring = "0.17"
+# Storage
+sled = "0.34"
+rocksdb = { version = "0.21", default-features = false }
+# Metrics
+prometheus = "0.13.4"
+sysinfo = "0.31"
+# Testing and benchmarking
+criterion = "0.5"
+proptest = "1.4"
+quickcheck = "1.0"
+approx = "0.5"
+# Additional dependencies for csf-time
+rand = "0.8"
+rand_xoshiro = "0.6"
+# Additional network dependencies
+tonic = "0.10"
+prost = "0.12"
+# Math and ML dependencies
+nalgebra = { version = "0.33", features = ["serde-serialize"] }
+ndarray = { version = "0.16", features = ["serde"] }
+statrs = "0.17"
+num-traits = "0.2"
+# Machine learning with candle (using newer version to avoid rand conflicts)
+candle-core = "0.9"
+candle-nn = "0.9" 
+candle-transformers = "0.9"
+# Additional dependencies
+num-complex = "0.4"
+bitflags = { version = "2.4", features = ["serde"] }
+sha2 = "0.10"
+indexmap = "2.0"
+# Compression libraries
+lz4 = "1.24"
+zstd = "0.13"

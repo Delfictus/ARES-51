@@ -1,0 +1,215 @@
+# ARES ChronoSynclastic Fabric - Critical Performance Alerts
+# Validates mission-critical success metrics with immediate alerting
+
+groups:
+  - name: csf_critical_performance
+    interval: 5s
+    rules:
+      # Sub-microsecond latency violation (CRITICAL)
+      - alert: CSF_LatencyViolation_Critical
+        expr: histogram_quantile(0.95, rate(csf_time_source_query_duration_ns_bucket[1m])) > 1000
+        for: 10s
+        labels:
+          severity: critical
+          component: csf-time
+        annotations:
+          summary: "CRITICAL: Sub-microsecond latency target violated"
+          description: "95th percentile TTW TimeSource query latency is {{ $value }}ns, exceeding 1μs target"
+          runbook_url: "https://docs.ares-csf.com/runbooks/latency-violation"
+
+      # Throughput below 1M messages/sec (CRITICAL)
+      - alert: CSF_ThroughputViolation_Critical
+        expr: rate(csf_bus_messages_processed_total[1m]) < 1000000
+        for: 30s
+        labels:
+          severity: critical
+          component: csf-bus
+        annotations:
+          summary: "CRITICAL: Message throughput below 1M/sec target"
+          description: "PCB message throughput is {{ $value }}/sec, below 1M/sec requirement"
+          
+      # Causality violations detected (P0)
+      - alert: CSF_CausalityViolation_P0
+        expr: increase(csf_causality_violations_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: P0
+          component: csf-time
+        annotations:
+          summary: "P0: Temporal causality violation detected"
+          description: "{{ $value }} causality violations in last 5 minutes - IMMEDIATE ACTION REQUIRED"
+
+      # Memory safety violation (P0)
+      - alert: CSF_MemorySafetyViolation_P0
+        expr: increase(csf_memory_violations_total[1m]) > 0
+        for: 0s
+        labels:
+          severity: P0
+          component: csf-ffi
+        annotations:
+          summary: "P0: Memory safety violation detected"
+          description: "Memory safety violation in FFI layer - SYSTEM COMPROMISE POSSIBLE"
+
+      # Panic events (P0)
+      - alert: CSF_PanicEvent_P0
+        expr: increase(csf_panic_events_total[1m]) > 0
+        for: 0s
+        labels:
+          severity: P0
+          component: csf-runtime
+        annotations:
+          summary: "P0: Panic event detected"
+          description: "Rust panic detected - Production stability compromised"
+
+  - name: csf_performance_degradation
+    interval: 15s
+    rules:
+      # HLC operation latency warning
+      - alert: CSF_HLC_LatencyWarning
+        expr: histogram_quantile(0.95, rate(csf_hlc_operation_duration_ns_bucket[1m])) > 600
+        for: 30s
+        labels:
+          severity: warning
+          component: csf-time
+        annotations:
+          summary: "HLC operation latency approaching threshold"
+          description: "HLC latency is {{ $value }}ns, approaching 600ns alert threshold"
+      
+      # Deadline misses
+      - alert: DeadlineMisses
+        expr: rate(csf_deadline_misses_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tasks missing deadlines"
+          description: "{{ $value }} deadline misses per second"
+      
+      # Task veto rate (safety violations)
+      - alert: HighTaskVetoRate
+        expr: rate(csf_tasks_vetoed_total[5m]) / rate(csf_tasks_scheduled_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High task veto rate"
+          description: "{{ $value | humanizePercentage }} of tasks are being vetoed by EGC"
+      
+      # EMS stress level
+      - alert: HighSystemStress
+        expr: csf_ems_stress_level > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High system stress detected"
+          description: "EMS stress level is {{ $value }}"
+      
+      # DRPP coherence drop
+      - alert: LowDrppCoherence
+        expr: csf_drpp_coherence < 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low DRPP coherence"
+          description: "DRPP field coherence dropped to {{ $value }}"
+      
+      # ADP prediction error
+      - alert: HighPredictionError
+        expr: csf_adp_prediction_error > 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High ADP prediction error"
+          description: "ADP prediction error is {{ $value }}"
+
+  - name: csf_availability
+    interval: 30s
+    rules:
+      # Node down
+      - alert: CsfNodeDown
+        expr: up{job="ares-csf"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CSF node is down"
+          description: "CSF node {{ $labels.instance }} has been down for more than 1 minute"
+      
+      # Scheduler utilization
+      - alert: HighSchedulerUtilization
+        expr: csf_scheduler_utilization > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High scheduler CPU utilization"
+          description: "Scheduler utilization is {{ $value | humanizePercentage }}"
+      
+      # Network peer count
+      - alert: LowPeerCount
+        expr: csf_network_peer_count < 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low network peer count"
+          description: "Only {{ $value }} peers connected"
+
+  - name: csf_resources
+    interval: 30s
+    rules:
+      # Memory usage
+      - alert: HighMemoryUsage
+        expr: csf_memory_usage_bytes / csf_memory_limit_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} of limit"
+      
+      # CPU usage
+      - alert: HighCpuUsage
+        expr: csf_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%"
+      
+      # GPU utilization (if enabled)
+      - alert: HighGpuUtilization
+        expr: csf_gpu_usage_percent > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High GPU utilization"
+          description: "GPU utilization is {{ $value }}%"
+
+  - name: csf_security
+    interval: 30s
+    rules:
+      # Cryptographic verification failures
+      - alert: CryptoVerificationFailures
+        expr: rate(csf_sil_verification_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cryptographic verification failures detected"
+          description: "{{ $value }} verification failures per second"
+      
+      # Blockchain consensus issues
+      - alert: BlockchainConsensusLost
+        expr: csf_blockchain_consensus_nodes < 3
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Blockchain consensus at risk"
+          description: "Only {{ $value }} consensus nodes available"
