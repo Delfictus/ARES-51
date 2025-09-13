@@ -1,5 +1,5 @@
 // PDB file parser with exact format specification compliance
-use crate::geometry::{Structure, Chain, ChainType, Residue, Atom, AminoAcid, StructureMetadata, ExperimentalMethod, HelixRecord, SheetRecord, SheetRegistration};
+use crate::geometry::{Structure, Chain, ChainType, Residue, Atom, AminoAcid, StructureMetadata, ExperimentalMethod, HelixRecord, SheetRecord, SheetRegistration, UnitCell};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -67,7 +67,13 @@ impl PDBParser {
                     Self::parse_expdta(&line, &mut structure.metadata);
                 }
                 "REMARK" => {
-                    Self::parse_remark(&line, &mut structure.metadata);
+                    Self::parse_remark(&line, &mut structure.metadata, &mut structure.space_group);
+                }
+                "AUTHOR" => {
+                    Self::parse_author(&line, &mut structure.metadata);
+                }
+                "CRYST1" => {
+                    Self::parse_cryst1(&line, &mut structure.unit_cell, &mut structure.space_group)?;
                 }
                 "ATOM  " | "HETATM" => {
                     let atom = Atom::from_pdb_line(&line, atom_counter)
@@ -103,9 +109,6 @@ impl PDBParser {
                 }
                 "SHEET " => {
                     Self::parse_sheet(&line, &mut structure)?;
-                }
-                "CRYST1" => {
-                    // Will implement unit cell parsing
                 }
                 "END   " | "ENDMDL" => {
                     break;
@@ -177,7 +180,13 @@ impl PDBParser {
                     Self::parse_expdta(&line, &mut structure.metadata);
                 }
                 "REMARK" => {
-                    Self::parse_remark(&line, &mut structure.metadata);
+                    Self::parse_remark(&line, &mut structure.metadata, &mut structure.space_group);
+                }
+                "AUTHOR" => {
+                    Self::parse_author(&line, &mut structure.metadata);
+                }
+                "CRYST1" => {
+                    Self::parse_cryst1(&line, &mut structure.unit_cell, &mut structure.space_group)?;
                 }
                 "ATOM  " | "HETATM" => {
                     let atom = Atom::from_pdb_line(&line, atom_counter)
@@ -213,9 +222,6 @@ impl PDBParser {
                 }
                 "SHEET " => {
                     Self::parse_sheet(&line, &mut structure)?;
-                }
-                "CRYST1" => {
-                    // Will implement unit cell parsing
                 }
                 "END   " | "ENDMDL" => {
                     break;
@@ -294,8 +300,8 @@ impl PDBParser {
         }
     }
 
-    /// Parse REMARK records for resolution and R-factors
-    fn parse_remark(line: &str, metadata: &mut StructureMetadata) {
+    /// Parse REMARK records for resolution, R-factors, and space group
+    fn parse_remark(line: &str, metadata: &mut StructureMetadata, space_group: &mut Option<String>) {
         if line.len() < 10 {
             return;
         }
@@ -338,8 +344,89 @@ impl PDBParser {
                     }
                 }
             }
+            "290" => {
+                // REMARK 290   CRYSTALLOGRAPHIC SYMMETRY
+                // REMARK 290   SYMMETRY OPERATORS FOR SPACE GROUP: P 21 21 21
+                if remark_text.contains("SPACE GROUP:") {
+                    if let Some(sg_start) = remark_text.find("SPACE GROUP:") {
+                        let space_group_text = remark_text[sg_start + 12..].trim();
+                        if !space_group_text.is_empty() {
+                            *space_group = Some(space_group_text.to_string());
+                        }
+                    }
+                }
+            }
             _ => {}
         }
+    }
+
+    /// Parse AUTHOR record
+    fn parse_author(line: &str, metadata: &mut StructureMetadata) {
+        if line.len() > 10 {
+            let author_part = line[10..].trim();
+            let authors: Vec<String> = author_part
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            
+            metadata.authors.extend(authors);
+        }
+    }
+
+    /// Parse CRYST1 record for unit cell and space group
+    fn parse_cryst1(line: &str, unit_cell: &mut Option<UnitCell>, space_group: &mut Option<String>) -> Result<(), PDBParseError> {
+        if line.len() < 55 {
+            return Ok(());
+        }
+
+        // CRYST1 format:
+        // CRYST1   61.777   58.233   23.135  90.00  90.00  90.00 P 21 21 21    4
+        // Columns: 7-15 (a), 16-24 (b), 25-33 (c), 34-40 (alpha), 41-47 (beta), 48-54 (gamma), 56-66 (space group)
+        
+        let a = line[6..15].trim().parse::<f64>().map_err(|_| {
+            PDBParseError::InvalidFormat("Invalid unit cell dimension a".to_string())
+        })?;
+        
+        let b = line[15..24].trim().parse::<f64>().map_err(|_| {
+            PDBParseError::InvalidFormat("Invalid unit cell dimension b".to_string())
+        })?;
+        
+        let c = line[24..33].trim().parse::<f64>().map_err(|_| {
+            PDBParseError::InvalidFormat("Invalid unit cell dimension c".to_string())
+        })?;
+        
+        let alpha = line[33..40].trim().parse::<f64>().map_err(|_| {
+            PDBParseError::InvalidFormat("Invalid unit cell angle alpha".to_string())
+        })?;
+        
+        let beta = line[40..47].trim().parse::<f64>().map_err(|_| {
+            PDBParseError::InvalidFormat("Invalid unit cell angle beta".to_string())
+        })?;
+        
+        let gamma = line[47..54].trim().parse::<f64>().map_err(|_| {
+            PDBParseError::InvalidFormat("Invalid unit cell angle gamma".to_string())
+        })?;
+
+        // Calculate volume (for orthorhombic case)
+        let volume = a * b * c;
+
+        *unit_cell = Some(UnitCell {
+            dimensions: (a, b, c),
+            angles: (alpha, beta, gamma),
+            volume,
+        });
+
+        // Parse space group if present (columns 56-66, excluding Z value)
+        if line.len() > 55 {
+            let sg_part = if line.len() > 66 { &line[55..66] } else { &line[55..] };
+            let sg_text = sg_part.trim();
+            if !sg_text.is_empty() {
+                *space_group = Some(sg_text.to_string());
+            }
+        }
+
+        Ok(())
     }
 
     /// Parse SEQRES record for sequence information
@@ -1091,5 +1178,121 @@ END"#;
         assert_eq!(chain.get_residue(11).unwrap().secondary_structure, SecondaryStructure::HelixPi);
         assert_eq!(chain.get_residue(12).unwrap().secondary_structure, SecondaryStructure::HelixPi);
         assert_eq!(chain.get_residue(13).unwrap().secondary_structure, SecondaryStructure::Unknown);
+    }
+
+    #[test]
+    fn test_header_information_extraction() {
+        let test_content = r#"HEADER    HYDROLASE/HYDROLASE INHIBITOR           12-NOV-94   1HTM              
+TITLE     HIV-1 PROTEASE IN COMPLEX WITH THE INHIBITOR CGP 53820          
+TITLE    2 DETAILED STRUCTURAL ANALYSIS                                    
+AUTHOR    J.P.PRIESTLE,A.SCHAR,H.P.GRUTTER                                 
+EXPDTA    X-RAY DIFFRACTION                                                 
+REMARK   2 RESOLUTION.    2.00 ANGSTROMS.                                   
+REMARK   3   R VALUE     (WORKING SET) : 0.180                              
+REMARK   3   FREE R VALUE             : 0.215                              
+REMARK 290   SYMMETRY OPERATORS FOR SPACE GROUP: P 21 21 21               
+CRYST1   61.777   58.233   23.135  90.00  90.00  90.00 P 21 21 21    4    
+ATOM      1  N   ALA A   1      20.154  16.967  -8.901  1.00 20.00           N  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "1HTM".to_string()).unwrap();
+        
+        // Test metadata extraction
+        assert_eq!(structure.metadata.classification, "HYDROLASE/HYDROLASE INHIBITOR");
+        assert_eq!(structure.metadata.deposition_date, "12-NOV-94");
+        assert_eq!(structure.metadata.title, "HIV-1 PROTEASE IN COMPLEX WITH THE INHIBITOR CGP 53820 DETAILED STRUCTURAL ANALYSIS");
+        assert_eq!(structure.metadata.experimental_method, ExperimentalMethod::XRayDiffraction);
+        assert_eq!(structure.metadata.resolution, Some(2.0));
+        assert_eq!(structure.metadata.r_work, Some(0.180));
+        assert_eq!(structure.metadata.r_free, Some(0.215));
+        assert_eq!(structure.metadata.authors, vec!["J.P.PRIESTLE", "A.SCHAR", "H.P.GRUTTER"]);
+        
+        // Test space group extraction
+        assert_eq!(structure.space_group, Some("P 21 21 21".to_string()));
+        
+        // Test unit cell extraction
+        assert!(structure.unit_cell.is_some());
+        let unit_cell = structure.unit_cell.unwrap();
+        assert_eq!(unit_cell.dimensions, (61.777, 58.233, 23.135));
+        assert_eq!(unit_cell.angles, (90.00, 90.00, 90.00));
+    }
+
+    #[test]
+    fn test_author_parsing() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+AUTHOR    J.DOE,A.SMITH,B.JOHNSON                                          
+AUTHOR   2 C.WILLIAMS,D.BROWN                                              
+ATOM      1  N   ALA A   1      20.154  16.967  -8.901  1.00 20.00           N  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        
+        assert_eq!(structure.metadata.authors, vec![
+            "J.DOE", "A.SMITH", "B.JOHNSON", "C.WILLIAMS", "D.BROWN"
+        ]);
+    }
+
+    #[test]
+    fn test_experimental_method_parsing() {
+        let methods = vec![
+            ("X-RAY DIFFRACTION", ExperimentalMethod::XRayDiffraction),
+            ("SOLUTION NMR", ExperimentalMethod::NMRSolution),
+            ("ELECTRON MICROSCOPY", ExperimentalMethod::ElectronMicroscopy),
+            ("NEUTRON DIFFRACTION", ExperimentalMethod::NeutronDiffraction),
+            ("THEORETICAL MODEL", ExperimentalMethod::Unknown),
+        ];
+
+        for (method_str, expected_method) in methods {
+            let test_content = format!(r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+EXPDTA    {}                                                 
+ATOM      1  N   ALA A   1      20.154  16.967  -8.901  1.00 20.00           N  
+END"#, method_str);
+
+            let structure = PDBParser::parse_string_no_validation(&test_content, "TEST".to_string()).unwrap();
+            assert_eq!(structure.metadata.experimental_method, expected_method);
+        }
+    }
+
+    #[test]
+    fn test_resolution_and_r_factor_parsing() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+REMARK   2 RESOLUTION.    1.75 ANGSTROMS.                                   
+REMARK   3   R VALUE     (WORKING SET) : 0.156                              
+REMARK   3   FREE R VALUE             : 0.189                              
+ATOM      1  N   ALA A   1      20.154  16.967  -8.901  1.00 20.00           N  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        
+        assert_eq!(structure.metadata.resolution, Some(1.75));
+        assert_eq!(structure.metadata.r_work, Some(0.156));
+        assert_eq!(structure.metadata.r_free, Some(0.189));
+    }
+
+    #[test]
+    fn test_unit_cell_parsing() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+CRYST1   75.123   82.456   91.789 100.50 105.30 110.80 P 1 21 1      4    
+ATOM      1  N   ALA A   1      20.154  16.967  -8.901  1.00 20.00           N  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        
+        assert!(structure.unit_cell.is_some());
+        let unit_cell = structure.unit_cell.unwrap();
+        assert_eq!(unit_cell.dimensions, (75.123, 82.456, 91.789));
+        assert_eq!(unit_cell.angles, (100.50, 105.30, 110.80));
+        assert_eq!(structure.space_group, Some("P 1 21 1".to_string()));
+    }
+
+    #[test]
+    fn test_space_group_from_remark() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+REMARK 290   SYMMETRY OPERATORS FOR SPACE GROUP: P 1                      
+ATOM      1  N   ALA A   1      20.154  16.967  -8.901  1.00 20.00           N  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        assert_eq!(structure.space_group, Some("P 1".to_string()));
     }
 }
