@@ -87,6 +87,9 @@ pub enum PRCTError {
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
     
+    #[error("Security error: {0}")]
+    Security(#[from] crate::security::SecurityError),
+    
     #[error("General error: {0}")]
     General(#[from] anyhow::Error),
 }
@@ -133,7 +136,7 @@ impl PRCTEngine {
         let force_field = ForceFieldParams::new();
         
         // Phase 2: Create Hamiltonian operator with exact physics
-        let mut hamiltonian = Hamiltonian::new(positions.clone(), masses, force_field.clone());
+        let mut hamiltonian = Hamiltonian::new(positions.clone(), masses, force_field.clone())?;
         
         // Phase 3: Calculate ground state 
         let ground_state = calculate_ground_state(&mut hamiltonian);
@@ -235,7 +238,7 @@ impl PRCTEngine {
         
         for iteration in 0..max_iterations {
             // Evolve Hamiltonian
-            state = hamiltonian.evolve(&state, dt);
+            state = hamiltonian.evolve(&state, dt)?;
             
             // Calculate current energy
             let energy = hamiltonian.total_energy(&state);
