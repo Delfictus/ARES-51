@@ -13,7 +13,10 @@
       "Bash(find:*)",
       "Bash(git reset:*)",
       "Bash(RUST_BACKTRACE=1 cargo test data::pdb_parser::tests::test_secondary_structure_assignment -- --exact --nocapture)",
-      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo check)"
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo check)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test contact_map_generator_creation --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test test_contact_map_generator_creation --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test contact_map --lib)"
     ],
     "deny": [],
     "ask": []

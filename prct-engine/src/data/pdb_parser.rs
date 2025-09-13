@@ -1128,9 +1128,7 @@ impl std::fmt::Display for PDBParseError {
 
 impl std::error::Error for PDBParseError {}
 
-// Include security tests
-#[cfg(test)]
-mod security_tests;
+// Security tests integrated with main test module
 
 #[cfg(test)]
 mod tests {

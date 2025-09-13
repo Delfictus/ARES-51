@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod security_tests {
     use super::*;
+    use crate::security::{SecurityValidator, SecurityError, SecurityConfig, RiskLevel, SecurityAuditLog};
     use std::time::Duration;
 
     #[test]
