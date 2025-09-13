@@ -58,6 +58,9 @@ pub struct PhaseResonance {
     /// Current time for time-dependent calculations
     current_time: f64,
     
+    /// Temperature for thermodynamic coupling (Kelvin)
+    temperature: f64,
+    
     /// Reference frequency f₀ (THz)
     reference_frequency: f64,
     
@@ -87,6 +90,7 @@ impl PhaseResonance {
             ramachandran_factors: Array2::ones((n_residues, n_residues)),
             torsion_factors: Array2::ones((n_residues, n_residues)),
             current_time: 0.0,
+            temperature: 300.0,      // Room temperature (K)
             reference_frequency: 1.0, // 1 THz  
             reference_distance: 3.8,  // Typical Cα-Cα distance (Å)
             coupling_normalization: 1.0,
@@ -99,6 +103,7 @@ impl PhaseResonance {
         resonance.initialize_wavefunctions();
         resonance.calculate_energy_couplings(force_field);
         resonance.calculate_ramachandran_constraints(sequence);
+        resonance.calculate_torsion_factors(positions);
         resonance.update_coupling_strengths(0.0);
         
         resonance
@@ -285,6 +290,78 @@ impl PhaseResonance {
         propensities
     }
     
+    /// Calculate torsion factors τ(eᵢⱼ,π) from backbone geometry
+    fn calculate_torsion_factors(&mut self, positions: &Array2<f64>) {
+        let residues_per_atom = positions.nrows() / self.n_residues;
+        
+        for i in 0..self.n_residues {
+            for j in 0..self.n_residues {
+                if i != j && i + 1 < self.n_residues && j + 1 < self.n_residues {
+                    // Calculate backbone torsion using 4 consecutive Cα positions
+                    let indices = if i < j { [i, i+1, j, j+1] } else { [j, j+1, i, i+1] };
+                    
+                    let mut torsion = 0.0;
+                    if indices.iter().all(|&idx| idx * residues_per_atom < positions.nrows()) {
+                        let pos1 = positions.row(indices[0] * residues_per_atom);
+                        let pos2 = positions.row(indices[1] * residues_per_atom);
+                        let pos3 = positions.row(indices[2] * residues_per_atom);
+                        let pos4 = positions.row(indices[3] * residues_per_atom);
+                        
+                        torsion = self.calculate_dihedral_angle(&pos1, &pos2, &pos3, &pos4);
+                    }
+                    
+                    // Convert torsion to factor: favorable angles get higher weights
+                    let torsion_factor = if torsion.abs() < PI/3.0 {
+                        1.2 // Favorable backbone geometry
+                    } else if torsion.abs() > 2.0*PI/3.0 {
+                        0.8 // Strained geometry
+                    } else {
+                        1.0 // Neutral
+                    };
+                    
+                    self.torsion_factors[[i, j]] = torsion_factor;
+                } else {
+                    self.torsion_factors[[i, j]] = 1.0;
+                }
+            }
+        }
+    }
+    
+    /// Calculate dihedral angle from four 3D points
+    fn calculate_dihedral_angle(&self, p1: &ndarray::ArrayView1<f64>, p2: &ndarray::ArrayView1<f64>, 
+                               p3: &ndarray::ArrayView1<f64>, p4: &ndarray::ArrayView1<f64>) -> f64 {
+        // Vector from p2 to p1, p2 to p3, p3 to p4
+        let b1 = [p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]];
+        let b2 = [p3[0] - p2[0], p3[1] - p2[1], p3[2] - p2[2]];
+        let b3 = [p4[0] - p3[0], p4[1] - p3[1], p4[2] - p3[2]];
+        
+        // Cross products
+        let c1 = [b1[1]*b2[2] - b1[2]*b2[1], b1[2]*b2[0] - b1[0]*b2[2], b1[0]*b2[1] - b1[1]*b2[0]];
+        let c2 = [b2[1]*b3[2] - b2[2]*b3[1], b2[2]*b3[0] - b2[0]*b3[2], b2[0]*b3[1] - b2[1]*b3[0]];
+        
+        // Magnitudes
+        let c1_mag = (c1[0]*c1[0] + c1[1]*c1[1] + c1[2]*c1[2]).sqrt();
+        let c2_mag = (c2[0]*c2[0] + c2[1]*c2[1] + c2[2]*c2[2]).sqrt();
+        
+        if c1_mag < 1e-10 || c2_mag < 1e-10 {
+            return 0.0; // Degenerate case
+        }
+        
+        // Dot product for angle
+        let dot_product = (c1[0]*c2[0] + c1[1]*c2[1] + c1[2]*c2[2]) / (c1_mag * c2_mag);
+        let angle = dot_product.clamp(-1.0, 1.0).acos();
+        
+        // Determine sign using scalar triple product
+        let b2_mag = (b2[0]*b2[0] + b2[1]*b2[1] + b2[2]*b2[2]).sqrt();
+        if b2_mag > 1e-10 {
+            let b2_norm = [b2[0]/b2_mag, b2[1]/b2_mag, b2[2]/b2_mag];
+            let triple_product = c1[0]*b2_norm[0] + c1[1]*b2_norm[1] + c1[2]*b2_norm[2];
+            if triple_product < 0.0 { -angle } else { angle }
+        } else {
+            angle
+        }
+    }
+    
     /// Update coupling strengths αᵢⱼ(t) with normalization
     pub fn update_coupling_strengths(&mut self, time: f64) {
         self.current_time = time;
@@ -303,7 +380,12 @@ impl PhaseResonance {
                     // Distance-dependent falloff  
                     let distance_factor = (-distance / 10.0).exp(); // 10 Å decay length
                     
-                    self.coupling_strengths[[i, j]] = base_energy * phase_mod * distance_factor;
+                    // Temperature-dependent Boltzmann factor
+                    let k_b = 0.001987; // kcal/(mol⋅K) - Boltzmann constant
+                    let beta = 1.0 / (k_b * self.temperature);
+                    let thermal_factor = (-beta * base_energy.abs()).exp();
+                    
+                    self.coupling_strengths[[i, j]] = base_energy * phase_mod * distance_factor * thermal_factor;
                 } else {
                     self.coupling_strengths[[i, j]] = 0.0;
                 }
@@ -428,6 +510,16 @@ impl PhaseResonance {
     /// Get phase differences
     pub fn phase_differences(&self) -> &Array2<f64> {
         &self.phase_differences
+    }
+    
+    /// Set temperature for thermodynamic calculations
+    pub fn set_temperature(&mut self, temperature: f64) {
+        self.temperature = temperature.max(1.0); // Prevent division by zero
+    }
+    
+    /// Get current temperature
+    pub fn temperature(&self) -> f64 {
+        self.temperature
     }
 }
 
