@@ -37,7 +37,12 @@
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::ramachandran::tests::test_backbone_dihedral_calculation -- --exact --nocapture)",
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::amino_acid::tests::test_one_to_three_conversion -- --exact --nocapture)",
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::atom::tests::test_element_from_atom_name -- --exact --nocapture)",
-      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::element::tests::test_pdb_name_parsing -- --exact --nocapture)"
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::element::tests::test_pdb_name_parsing -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::phase_resonance --lib -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test phase_resonance --lib -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test test_phase_resonance_construction --lib -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test test_phase_coherence_calculation --lib -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian::tests::test_energy_conservation -- --exact --nocapture)"
     ],
     "deny": [],
     "ask": []
