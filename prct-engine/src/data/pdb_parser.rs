@@ -50,7 +50,7 @@ impl PDBParser {
     {
         let mut structure = Structure::new(structure_id);
         let mut chains: HashMap<char, Chain> = HashMap::new();
-        let mut current_residue_map: HashMap<(char, i32), Residue> = HashMap::new();
+        let mut current_residue_map: std::collections::BTreeMap<(char, i32), Residue> = std::collections::BTreeMap::new();
         let mut atom_counter = 0;
 
         for (line_num, line_result) in lines.enumerate() {
@@ -163,7 +163,7 @@ impl PDBParser {
     {
         let mut structure = Structure::new(structure_id);
         let mut chains: HashMap<char, Chain> = HashMap::new();
-        let mut current_residue_map: HashMap<(char, i32), Residue> = HashMap::new();
+        let mut current_residue_map: std::collections::BTreeMap<(char, i32), Residue> = std::collections::BTreeMap::new();
         let mut atom_counter = 0;
 
         for (line_num, line_result) in lines.enumerate() {
@@ -819,7 +819,7 @@ impl SecurePDBParser {
         let lines = content.lines();
         let mut structure = Structure::new(structure_id.clone());
         let mut chains: HashMap<char, Chain> = HashMap::new();
-        let mut current_residue_map: HashMap<(char, i32), Residue> = HashMap::new();
+        let mut current_residue_map: std::collections::BTreeMap<(char, i32), Residue> = std::collections::BTreeMap::new();
         let mut atom_counter = 0;
 
         for (line_num, line) in lines.enumerate() {
@@ -1514,15 +1514,15 @@ END"#;
         let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
         let chain = structure.get_chain('A').unwrap();
 
-        // Check secondary structure sequence (Note: residues appear in order they were parsed from ATOM records)
+        // Check secondary structure sequence (residues now ordered by sequence number)
         let ss_seq = chain.secondary_structure_sequence();
-        assert_eq!(ss_seq, "III-"); // Pi helix residues then unknown
+        assert_eq!(ss_seq, "GGG-"); // 3-10 helix residues then unknown
 
         // Verify specific assignments
         use crate::geometry::residue::SecondaryStructure;
-        assert_eq!(chain.get_residue(10).unwrap().secondary_structure, SecondaryStructure::HelixPi);
-        assert_eq!(chain.get_residue(11).unwrap().secondary_structure, SecondaryStructure::HelixPi);
-        assert_eq!(chain.get_residue(12).unwrap().secondary_structure, SecondaryStructure::HelixPi);
+        assert_eq!(chain.get_residue(10).unwrap().secondary_structure, SecondaryStructure::Helix310);
+        assert_eq!(chain.get_residue(11).unwrap().secondary_structure, SecondaryStructure::Helix310);
+        assert_eq!(chain.get_residue(12).unwrap().secondary_structure, SecondaryStructure::Helix310);
         assert_eq!(chain.get_residue(13).unwrap().secondary_structure, SecondaryStructure::Unknown);
     }
 

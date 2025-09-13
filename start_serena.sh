@@ -5,7 +5,7 @@ set -e
 PROJECT_DIR="/media/diddy/ARES-51/CAPO-AI"
 API_KEY="ares512025"
 SERVER_PORT="8080"
-CONFIG_FILE="serena_config.yml"
+CONFIG_FILE="serena_config.json"
 
 # --- Colors ---
 GREEN='\033[0;32m'

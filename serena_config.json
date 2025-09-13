@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "mcpServers": {
+    "ARES-51": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "python",
+        "-m",
+        "serena.agent",
+        "--project",
+        "."
+      ]
+    }
+  }
+}

@@ -419,8 +419,8 @@ impl Structure {
                     if let Some(residue) = chain.get_residue_mut(seq_num) {
                         residue.secondary_structure = match helix.helix_class {
                             1 => crate::geometry::residue::SecondaryStructure::Helix,
-                            3 => crate::geometry::residue::SecondaryStructure::HelixPi,
-                            5 => crate::geometry::residue::SecondaryStructure::Helix310,
+                            3 => crate::geometry::residue::SecondaryStructure::Helix310,  // 3-10 helix 
+                            5 => crate::geometry::residue::SecondaryStructure::HelixPi,   // Pi helix
                             _ => crate::geometry::residue::SecondaryStructure::Helix,
                         };
                     }
@@ -605,6 +605,11 @@ impl Structure {
         
         for chain in self.protein_chains() {
             let residues = chain.residues();
+            
+            // Need at least 3 residues to calculate dihedral angles
+            if residues.len() < 3 {
+                continue;
+            }
             
             for i in 1..(residues.len()-1) {
                 let prev = &residues[i-1];

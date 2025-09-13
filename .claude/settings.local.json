@@ -16,7 +16,18 @@
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo check)",
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test contact_map_generator_creation --lib)",
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test test_contact_map_generator_creation --lib)",
-      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test contact_map --lib)"
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test contact_map --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test optimization::energy_minimization --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian::tests::test_energy_conservation --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian::tests::test_hamiltonian_construction --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian::tests::test_ground_state_calculation --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian::tests::test_prct_phase_resonance_integration --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test --lib)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian::tests::test_prct_phase_resonance_integration -- --exact --nocapture)",
+      "Bash(git commit:*)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_secondary_structure_assignment -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_seqres_parsing -- --exact --nocapture)"
     ],
     "deny": [],
     "ask": []
