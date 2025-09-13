@@ -1,5 +1,5 @@
 // PDB file parser with exact format specification compliance
-use crate::geometry::{Structure, Chain, ChainType, Residue, Atom, AminoAcid, StructureMetadata, ExperimentalMethod};
+use crate::geometry::{Structure, Chain, ChainType, Residue, Atom, AminoAcid, StructureMetadata, ExperimentalMethod, HelixRecord, SheetRecord, SheetRegistration};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -99,10 +99,10 @@ impl PDBParser {
                     Self::parse_seqres(&line, &mut structure)?;
                 }
                 "HELIX " => {
-                    // Will implement in phase 1B.1.3
+                    Self::parse_helix(&line, &mut structure)?;
                 }
                 "SHEET " => {
-                    // Will implement in phase 1B.1.3
+                    Self::parse_sheet(&line, &mut structure)?;
                 }
                 "CRYST1" => {
                     // Will implement unit cell parsing
@@ -132,6 +132,9 @@ impl PDBParser {
                 structure.add_chain(chain);
             }
         }
+
+        // Assign secondary structure from parsed HELIX and SHEET records
+        structure.assign_secondary_structure_from_records();
 
         // Validate structure
         let errors = structure.validate();
@@ -206,10 +209,10 @@ impl PDBParser {
                     Self::parse_seqres(&line, &mut structure)?;
                 }
                 "HELIX " => {
-                    // Will implement in phase 1B.1.3
+                    Self::parse_helix(&line, &mut structure)?;
                 }
                 "SHEET " => {
-                    // Will implement in phase 1B.1.3
+                    Self::parse_sheet(&line, &mut structure)?;
                 }
                 "CRYST1" => {
                     // Will implement unit cell parsing
@@ -245,6 +248,9 @@ impl PDBParser {
                 structure.add_chain(chain);
             }
         }
+
+        // Assign secondary structure from parsed HELIX and SHEET records
+        structure.assign_secondary_structure_from_records();
 
         // NO VALIDATION - return structure as-is
         Ok(structure)
@@ -403,6 +409,157 @@ impl PDBParser {
             }
         }
 
+        Ok(())
+    }
+
+    /// Parse HELIX record for secondary structure information
+    fn parse_helix(line: &str, structure: &mut Structure) -> Result<(), PDBParseError> {
+        // HELIX format (columns 1-6: "HELIX ", 8-10: serial, 12-14: helix ID, 16-18: initial residue, 20: initial chain,
+        //               22-25: initial seq num, 26: initial iCode, 28-30: terminal residue, 32: terminal chain,
+        //               34-37: terminal seq num, 38: terminal iCode, 39-40: helix class, 41-70: comment, 72-76: length)
+        if line.len() < 38 {
+            return Ok(()); // Skip malformed HELIX records
+        }
+
+        let helix_id = line.get(11..14).unwrap_or("").trim();
+        if helix_id.is_empty() {
+            return Err(PDBParseError::InvalidFormat("Missing helix ID in HELIX record".to_string()));
+        }
+
+        // Parse initial residue position
+        let init_chain = line.chars().nth(19).unwrap_or(' ');
+        let init_seq_str = line.get(21..25).unwrap_or("").trim();
+        let init_seq_num: i32 = init_seq_str.parse()
+            .map_err(|_| PDBParseError::InvalidFormat(format!("Invalid initial seq num: {}", init_seq_str)))?;
+        let init_insertion = line.chars().nth(25).filter(|&c| c != ' ');
+
+        // Parse terminal residue position
+        let end_chain = line.chars().nth(31).unwrap_or(' ');
+        let end_seq_str = line.get(33..37).unwrap_or("").trim();
+        let end_seq_num: i32 = end_seq_str.parse()
+            .map_err(|_| PDBParseError::InvalidFormat(format!("Invalid terminal seq num: {}", end_seq_str)))?;
+        let end_insertion = line.chars().nth(37).filter(|&c| c != ' ');
+
+        // Parse helix class (default to 1 for right-handed alpha if missing)
+        let helix_class_str = line.get(38..40).unwrap_or("").trim();
+        let helix_class = if helix_class_str.is_empty() {
+            1 // Default to right-handed alpha helix
+        } else {
+            helix_class_str.parse().unwrap_or(1)
+        };
+
+        // Parse comment and length (optional)
+        let comment = line.get(40..70).map(|s| s.trim()).filter(|s| !s.is_empty()).map(String::from);
+        let length_str = line.get(71..76).unwrap_or("").trim();
+        let length = if length_str.is_empty() {
+            (end_seq_num - init_seq_num + 1).max(1) // Calculate from positions
+        } else {
+            length_str.parse().unwrap_or(end_seq_num - init_seq_num + 1)
+        };
+
+        let helix_record = HelixRecord {
+            id: helix_id.to_string(),
+            helix_class,
+            init_chain,
+            init_seq_num,
+            init_insertion,
+            end_chain,
+            end_seq_num,
+            end_insertion,
+            length,
+            comment,
+        };
+
+        structure.helices.push(helix_record);
+        Ok(())
+    }
+
+    /// Parse SHEET record for secondary structure information
+    fn parse_sheet(line: &str, structure: &mut Structure) -> Result<(), PDBParseError> {
+        // SHEET format (columns 1-6: "SHEET ", 8-10: strand, 12-14: sheet ID, 15-16: num strands,
+        //               18-20: initial residue, 22: initial chain, 23-26: initial seq num, 27: initial iCode,
+        //               29-31: terminal residue, 33: terminal chain, 34-37: terminal seq num, 38: terminal iCode,
+        //               39-40: sense, 42-45: registration)
+        if line.len() < 38 {
+            return Ok(()); // Skip malformed SHEET records
+        }
+
+        let strand_str = line.get(7..10).unwrap_or("").trim();
+        let strand: i32 = strand_str.parse()
+            .map_err(|_| PDBParseError::InvalidFormat(format!("Invalid strand number: {}", strand_str)))?;
+
+        let sheet_id = line.get(11..14).unwrap_or("").trim();
+        if sheet_id.is_empty() {
+            return Err(PDBParseError::InvalidFormat("Missing sheet ID in SHEET record".to_string()));
+        }
+
+        let num_strands_str = line.get(14..16).unwrap_or("").trim();
+        let num_strands: i32 = num_strands_str.parse().unwrap_or(1);
+
+        // Parse initial residue position
+        let init_chain = line.chars().nth(21).unwrap_or(' ');
+        let init_seq_str = line.get(22..26).unwrap_or("").trim();
+        let init_seq_num: i32 = init_seq_str.parse()
+            .map_err(|_| PDBParseError::InvalidFormat(format!("Invalid initial seq num: {}", init_seq_str)))?;
+        let init_insertion = line.chars().nth(26).filter(|&c| c != ' ');
+
+        // Parse terminal residue position
+        let end_chain = line.chars().nth(32).unwrap_or(' ');
+        let end_seq_str = line.get(33..37).unwrap_or("").trim();
+        let end_seq_num: i32 = end_seq_str.parse()
+            .map_err(|_| PDBParseError::InvalidFormat(format!("Invalid terminal seq num: {}", end_seq_str)))?;
+        let end_insertion = line.chars().nth(37).filter(|&c| c != ' ');
+
+        // Parse sense (0=first strand, 1=parallel, -1=antiparallel)
+        let sense_str = line.get(38..40).unwrap_or("").trim();
+        let sense = if sense_str.is_empty() {
+            0 // First strand (no previous strand to compare to)
+        } else {
+            sense_str.parse().unwrap_or(0)
+        };
+
+        // Parse registration information (optional for strands > 1)
+        let registration = if line.len() > 50 && strand > 1 {
+            let cur_atom = line.get(41..45).unwrap_or("").trim();
+            let cur_chain = line.chars().nth(49).unwrap_or(' ');
+            let cur_seq_str = line.get(50..54).unwrap_or("").trim();
+            let prev_atom = line.get(56..60).unwrap_or("").trim();
+            let prev_chain = line.chars().nth(64).unwrap_or(' ');
+            let prev_seq_str = line.get(65..69).unwrap_or("").trim();
+
+            if !cur_atom.is_empty() && !prev_atom.is_empty() {
+                Some(SheetRegistration {
+                    cur_atom: cur_atom.to_string(),
+                    cur_chain,
+                    cur_seq_num: cur_seq_str.parse().unwrap_or(init_seq_num),
+                    cur_insertion: line.chars().nth(54).filter(|&c| c != ' '),
+                    prev_atom: prev_atom.to_string(),
+                    prev_chain,
+                    prev_seq_num: prev_seq_str.parse().unwrap_or(end_seq_num),
+                    prev_insertion: line.chars().nth(69).filter(|&c| c != ' '),
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        let sheet_record = SheetRecord {
+            sheet_id: sheet_id.to_string(),
+            strand,
+            num_strands,
+            init_chain,
+            init_seq_num,
+            init_insertion,
+            end_chain,
+            end_seq_num,
+            end_insertion,
+            sense,
+            registration,
+        };
+
+        structure.sheets.push(sheet_record);
         Ok(())
     }
 
@@ -730,5 +887,209 @@ END"#;
         
         // Authoritative sequence should be SEQRES
         assert_eq!(chain.authoritative_sequence(), "RANDC");
+    }
+
+    #[test]
+    fn test_helix_parsing() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+HELIX    1  H1 ALA A   10  LEU A   20  1                                  11
+ATOM      1  N   ALA A   10     20.154  16.967  -8.901  1.00 20.00           N  
+ATOM      2  CA  ALA A   10     21.618  16.507  -8.620  1.00 20.00           C  
+ATOM      3  N   VAL A   15     22.090  18.831  -9.221  1.00 20.00           N  
+ATOM      4  CA  VAL A   15     22.968  19.990  -9.519  1.00 20.00           C  
+ATOM      5  N   LEU A   20     24.090  20.831  -9.421  1.00 20.00           N  
+ATOM      6  CA  LEU A   20     24.968  21.990  -9.619  1.00 20.00           C  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        
+        // Check that the HELIX record was parsed
+        assert_eq!(structure.helices.len(), 1);
+        let helix = &structure.helices[0];
+        assert_eq!(helix.id, "H1");
+        assert_eq!(helix.helix_class, 1); // Right-handed alpha helix
+        assert_eq!(helix.init_chain, 'A');
+        assert_eq!(helix.init_seq_num, 10);
+        assert_eq!(helix.end_chain, 'A');
+        assert_eq!(helix.end_seq_num, 20);
+        assert_eq!(helix.length, 11);
+
+        // Check that secondary structure was assigned to residues in helix range
+        let chain = structure.get_chain('A').unwrap();
+        if let Some(residue) = chain.get_residue(10) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix);
+        }
+        if let Some(residue) = chain.get_residue(15) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix);
+        }
+        if let Some(residue) = chain.get_residue(20) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix);
+        }
+    }
+
+    #[test]
+    fn test_sheet_parsing() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+SHEET    1   A 3 ILE A  96  THR A 101  0                                        
+SHEET    2   A 3 PHE A 134  PHE A 138  1  N  LEU A 135   O  THR A  97
+SHEET    3   A 3 ARG A 180  ILE A 184 -1  N  PHE A 182   O  ILE A 136
+ATOM      1  N   ILE A   96     20.154  16.967  -8.901  1.00 20.00           N  
+ATOM      2  CA  ILE A   96     21.618  16.507  -8.620  1.00 20.00           C  
+ATOM      3  N   THR A  101     22.090  18.831  -9.221  1.00 20.00           N  
+ATOM      4  CA  THR A  101     22.968  19.990  -9.519  1.00 20.00           C  
+ATOM      5  N   PHE A  134     24.090  20.831  -9.421  1.00 20.00           N  
+ATOM      6  CA  PHE A  134     24.968  21.990  -9.619  1.00 20.00           C  
+ATOM      7  N   PHE A  138     26.090  22.831  -9.521  1.00 20.00           N  
+ATOM      8  CA  PHE A  138     26.968  23.990  -9.719  1.00 20.00           C  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        
+        // Check that the SHEET records were parsed
+        assert_eq!(structure.sheets.len(), 3);
+        
+        // Check first strand
+        let strand1 = &structure.sheets[0];
+        assert_eq!(strand1.sheet_id, "A");
+        assert_eq!(strand1.strand, 1);
+        assert_eq!(strand1.num_strands, 3);
+        assert_eq!(strand1.init_chain, 'A');
+        assert_eq!(strand1.init_seq_num, 96);
+        assert_eq!(strand1.end_chain, 'A');
+        assert_eq!(strand1.end_seq_num, 101);
+        assert_eq!(strand1.sense, 0); // First strand
+        assert!(strand1.registration.is_none()); // No registration for first strand
+
+        // Check second strand (parallel)
+        let strand2 = &structure.sheets[1];
+        assert_eq!(strand2.strand, 2);
+        assert_eq!(strand2.sense, 1); // Parallel
+        assert!(strand2.registration.is_some());
+        let reg2 = strand2.registration.as_ref().unwrap();
+        assert_eq!(reg2.cur_atom, "N");
+        assert_eq!(reg2.cur_chain, 'A');
+        assert_eq!(reg2.cur_seq_num, 135);
+        assert_eq!(reg2.prev_atom, "O");
+        assert_eq!(reg2.prev_chain, 'A');
+        assert_eq!(reg2.prev_seq_num, 97);
+
+        // Check third strand (antiparallel)
+        let strand3 = &structure.sheets[2];
+        assert_eq!(strand3.strand, 3);
+        assert_eq!(strand3.sense, -1); // Antiparallel
+
+        // Check that secondary structure was assigned to residues in sheet ranges
+        let chain = structure.get_chain('A').unwrap();
+        if let Some(residue) = chain.get_residue(96) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Sheet);
+        }
+        if let Some(residue) = chain.get_residue(134) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Sheet);
+        }
+    }
+
+    #[test]
+    fn test_mixed_secondary_structure() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+HELIX    1  H1 ALA A   10  LEU A   20  1                                  11
+HELIX    2  H2 VAL A   35  GLY A   40  5                                   6
+SHEET    1   A 2 ILE A  50  THR A  55  0                                        
+SHEET    2   A 2 PHE A  60  PHE A  65  1  N  LEU A  62   O  THR A  52
+ATOM      1  N   ALA A  10      10.000   0.000   0.000  1.00 20.00           N  
+ATOM      2  CA  ALA A  10      11.000   0.000   0.000  1.00 20.00           C  
+ATOM      3  N   LEU A  20      20.000   0.000   0.000  1.00 20.00           N  
+ATOM      4  CA  LEU A  20      21.000   0.000   0.000  1.00 20.00           C  
+ATOM      5  N   VAL A  35      35.000   0.000   0.000  1.00 20.00           N  
+ATOM      6  CA  VAL A  35      36.000   0.000   0.000  1.00 20.00           C  
+ATOM      7  N   GLY A  40      40.000   0.000   0.000  1.00 20.00           N  
+ATOM      8  CA  GLY A  40      41.000   0.000   0.000  1.00 20.00           C  
+ATOM      9  N   ILE A  50      50.000   0.000   0.000  1.00 20.00           N  
+ATOM     10  CA  ILE A  50      51.000   0.000   0.000  1.00 20.00           C  
+ATOM     11  N   THR A  55      55.000   0.000   0.000  1.00 20.00           N  
+ATOM     12  CA  THR A  55      56.000   0.000   0.000  1.00 20.00           C  
+ATOM     13  N   PHE A  60      60.000   0.000   0.000  1.00 20.00           N  
+ATOM     14  CA  PHE A  60      61.000   0.000   0.000  1.00 20.00           C  
+ATOM     15  N   PHE A  65      65.000   0.000   0.000  1.00 20.00           N  
+ATOM     16  CA  PHE A  65      66.000   0.000   0.000  1.00 20.00           C  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        
+        // Check records were parsed correctly
+        assert_eq!(structure.helices.len(), 2);
+        assert_eq!(structure.sheets.len(), 2);
+
+        // Check different helix types
+        let helix1 = &structure.helices[0];
+        assert_eq!(helix1.helix_class, 1); // Alpha helix
+        let helix2 = &structure.helices[1];
+        assert_eq!(helix2.helix_class, 5); // 3-10 helix
+
+        // Check chain for mixed secondary structure
+        let chain = structure.get_chain('A').unwrap();
+        
+        // Alpha helix residues
+        if let Some(residue) = chain.get_residue(10) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix);
+        }
+        if let Some(residue) = chain.get_residue(20) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix);
+        }
+        
+        // 3-10 helix residues
+        if let Some(residue) = chain.get_residue(35) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix310);
+        }
+        if let Some(residue) = chain.get_residue(40) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix310);
+        }
+        
+        // Sheet residues
+        if let Some(residue) = chain.get_residue(50) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Sheet);
+        }
+        if let Some(residue) = chain.get_residue(60) {
+            use crate::geometry::residue::SecondaryStructure;
+            assert_eq!(residue.secondary_structure, SecondaryStructure::Sheet);
+        }
+    }
+
+    #[test]
+    fn test_secondary_structure_assignment() {
+        let test_content = r#"HEADER    TEST PROTEIN                            01-JAN-00   TEST              
+HELIX    1  H1 ALA A   10  ALA A   12  3                                   3
+ATOM      1  N   ALA A  10      10.000   0.000   0.000  1.00 20.00           N  
+ATOM      2  CA  ALA A  10      11.000   0.000   0.000  1.00 20.00           C  
+ATOM      3  N   ALA A  11      11.000   0.000   0.000  1.00 20.00           N  
+ATOM      4  CA  ALA A  11      12.000   0.000   0.000  1.00 20.00           C  
+ATOM      5  N   ALA A  12      12.000   0.000   0.000  1.00 20.00           N  
+ATOM      6  CA  ALA A  12      13.000   0.000   0.000  1.00 20.00           C  
+ATOM      7  N   ALA A  13      13.000   0.000   0.000  1.00 20.00           N  
+ATOM      8  CA  ALA A  13      14.000   0.000   0.000  1.00 20.00           C  
+END"#;
+
+        let structure = PDBParser::parse_string_no_validation(test_content, "TEST".to_string()).unwrap();
+        let chain = structure.get_chain('A').unwrap();
+
+        // Check secondary structure sequence (Note: residues appear in order they were parsed from ATOM records)
+        let ss_seq = chain.secondary_structure_sequence();
+        assert_eq!(ss_seq, "III-"); // Pi helix residues then unknown
+
+        // Verify specific assignments
+        use crate::geometry::residue::SecondaryStructure;
+        assert_eq!(chain.get_residue(10).unwrap().secondary_structure, SecondaryStructure::HelixPi);
+        assert_eq!(chain.get_residue(11).unwrap().secondary_structure, SecondaryStructure::HelixPi);
+        assert_eq!(chain.get_residue(12).unwrap().secondary_structure, SecondaryStructure::HelixPi);
+        assert_eq!(chain.get_residue(13).unwrap().secondary_structure, SecondaryStructure::Unknown);
     }
 }
