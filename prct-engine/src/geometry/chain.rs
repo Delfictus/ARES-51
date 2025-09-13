@@ -291,7 +291,7 @@ impl Chain {
         // Count mismatches
         let mut matches = 0;
         let mut mismatches = 0;
-        let min_len = seqres.len().min(atom_seq.len());
+        let _min_len = seqres.len().min(atom_seq.len());
         
         for (seqres_char, atom_char) in seqres.chars().zip(atom_seq.chars()) {
             if seqres_char == atom_char {

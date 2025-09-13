@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(export CARGO_TARGET_DIR=/tmp/capo-build)",
+      "Bash(cargo check:*)",
+      "Bash(cargo test)",
+      "Bash(cargo test:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(chmod:*)",
+      "Bash(cargo clean:*)",
+      "Bash(find:*)",
+      "Bash(git reset:*)",
+      "Bash(RUST_BACKTRACE=1 cargo test data::pdb_parser::tests::test_secondary_structure_assignment -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo check)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

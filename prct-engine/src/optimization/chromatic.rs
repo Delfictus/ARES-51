@@ -17,8 +17,8 @@ NO random coloring assignments or heuristic approximations.
 ALL bounds verified mathematically before use.
 */
 
-use std::collections::{HashMap, HashSet, VecDeque};
-use ndarray::{Array1, Array2};
+use std::collections::{HashSet, VecDeque};
+use ndarray::Array2;
 use num_complex::Complex64;
 use std::f64::consts::PI;
 
@@ -55,11 +55,11 @@ impl SparseGraph {
     /// Vector containing vertices in maximum clique
     pub fn find_maximum_clique(&self) -> Vec<usize> {
         let mut cliques = Vec::new();
-        let mut R = HashSet::new();
-        let mut P: HashSet<usize> = (0..self.n_vertices).collect();
-        let mut X = HashSet::new();
+        let mut r = HashSet::new();
+        let mut p: HashSet<usize> = (0..self.n_vertices).collect();
+        let mut x = HashSet::new();
         
-        self.bron_kerbosch(&mut R, &mut P, &mut X, &mut cliques);
+        self.bron_kerbosch(&mut r, &mut p, &mut x, &mut cliques);
         
         // Find maximum clique among all maximal cliques
         cliques.into_iter()
@@ -75,41 +75,41 @@ impl SparseGraph {
     /// * `P` - Candidate vertices that can extend current clique
     /// * `X` - Vertices already processed
     /// * `cliques` - Output vector collecting all maximal cliques
-    fn bron_kerbosch(&self, R: &mut HashSet<usize>, P: &mut HashSet<usize>, 
-                     X: &mut HashSet<usize>, cliques: &mut Vec<HashSet<usize>>) {
+    fn bron_kerbosch(&self, r: &mut HashSet<usize>, p: &mut HashSet<usize>, 
+                     x: &mut HashSet<usize>, cliques: &mut Vec<HashSet<usize>>) {
         
-        if P.is_empty() && X.is_empty() {
+        if p.is_empty() && x.is_empty() {
             // Found maximal clique
-            cliques.push(R.clone());
+            cliques.push(r.clone());
             return;
         }
         
         // Choose pivot vertex to minimize branching (Tomita et al. improvement)
-        let pivot = self.choose_pivot(P, X);
-        let pivot_neighbors: HashSet<usize> = if let Some(p) = pivot {
-            self.neighbors(p).collect()
+        let pivot = self.choose_pivot(p, x);
+        let pivot_neighbors: HashSet<usize> = if let Some(pivot_vertex) = pivot {
+            self.neighbors(pivot_vertex).collect()
         } else {
             HashSet::new()
         };
         
-        // Process vertices in P that are not neighbors of pivot
-        let candidates: Vec<usize> = P.difference(&pivot_neighbors).copied().collect();
+        // Process vertices in p that are not neighbors of pivot
+        let candidates: Vec<usize> = p.difference(&pivot_neighbors).copied().collect();
         
         for v in candidates {
             let v_neighbors: HashSet<usize> = self.neighbors(v).collect();
             
             // Recursive call with updated sets
-            let mut new_R = R.clone();
-            new_R.insert(v);
+            let mut new_r = r.clone();
+            new_r.insert(v);
             
-            let mut new_P = P.intersection(&v_neighbors).copied().collect();
-            let mut new_X = X.intersection(&v_neighbors).copied().collect();
+            let mut new_p = p.intersection(&v_neighbors).copied().collect();
+            let mut new_x = x.intersection(&v_neighbors).copied().collect();
             
-            self.bron_kerbosch(&mut new_R, &mut new_P, &mut new_X, cliques);
+            self.bron_kerbosch(&mut new_r, &mut new_p, &mut new_x, cliques);
             
-            // Move v from P to X
-            P.remove(&v);
-            X.insert(v);
+            // Move v from p to x
+            p.remove(&v);
+            x.insert(v);
         }
     }
     
@@ -121,8 +121,8 @@ impl SparseGraph {
     /// 
     /// # Returns
     /// Pivot vertex with maximum degree in P ∪ X
-    fn choose_pivot(&self, P: &HashSet<usize>, X: &HashSet<usize>) -> Option<usize> {
-        P.union(X)
+    fn choose_pivot(&self, p: &HashSet<usize>, x: &HashSet<usize>) -> Option<usize> {
+        p.union(x)
             .max_by_key(|&&v| self.vertex_degree(v))
             .copied()
     }

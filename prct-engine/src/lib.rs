@@ -30,6 +30,7 @@ pub mod data;
 pub mod geometry;
 pub mod optimization;
 pub mod validation;
+pub mod security;
 
 // Legacy modules (to be refactored) - COMMENTED OUT FOR INITIAL BUILD
 // pub mod dataset_downloader;
@@ -390,7 +391,7 @@ impl fmt::Display for PRCTStats {
         write!(f, "  Average folding time: {:.1}s\n", self.average_folding_time_seconds)?;
         write!(f, "  Validation success rate: {:.1}%\n", 
                100.0 * self.validation_tests_passed as f64 / 
-               (self.validation_tests_passed + self.validation_tests_failed).max(1) as f64);
+               (self.validation_tests_passed + self.validation_tests_failed).max(1) as f64)?;
         Ok(())
     }
 }

@@ -22,11 +22,10 @@ NO approximations where exact solutions exist.
 ALL intermediate results validated against analytical test cases.
 */
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, s};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
-use nalgebra::{DMatrix, DVector, ComplexField};
 use std::f64::consts::PI;
-use crate::data::{AtomicMass, ForceFieldParams};
+use crate::data::ForceFieldParams;
 
 /// Fundamental constants (CODATA 2018 values - exact)
 pub const HBAR: f64 = 1.054571817e-34; // J⋅s

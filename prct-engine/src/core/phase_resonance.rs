@@ -23,11 +23,10 @@ NO random phase assignments or hardcoded values.
 ALL resonance frequencies calculated from distance scaling laws.
 */
 
-use ndarray::{Array1, Array2, ArrayView1, s};
+use ndarray::Array2;
 use num_complex::Complex64;
 use std::f64::consts::PI;
-use crate::core::hamiltonian::Hamiltonian;
-use crate::data::{ForceFieldParams, AtomicData};
+use crate::data::ForceFieldParams;
 
 /// Phase resonance field for protein folding dynamics
 #[derive(Debug, Clone)]
@@ -199,8 +198,8 @@ impl PhaseResonance {
     }
     
     /// Calculate electrostatic coupling between residues i and j
-    fn calculate_electrostatic_coupling(&self, i: usize, j: usize, distance: f64, 
-                                       force_field: &ForceFieldParams) -> f64 {
+    fn calculate_electrostatic_coupling(&self, _i: usize, _j: usize, distance: f64, 
+                                       _force_field: &ForceFieldParams) -> f64 {
         // Simplified model: assume unit charges at Cα positions
         let qi = 1.0; // Will be replaced with actual partial charges
         let qj = 1.0;
@@ -213,7 +212,7 @@ impl PhaseResonance {
     }
     
     /// Calculate van der Waals coupling  
-    fn calculate_vdw_coupling(&self, i: usize, j: usize, distance: f64,
+    fn calculate_vdw_coupling(&self, _i: usize, _j: usize, distance: f64,
                              _force_field: &ForceFieldParams) -> f64 {
         // Simplified Lennard-Jones interaction
         let sigma = 3.8; // Å (typical Cα-Cα contact distance)
@@ -227,7 +226,7 @@ impl PhaseResonance {
     }
     
     /// Calculate hydrogen bond energy contribution
-    fn calculate_hydrogen_bond_energy(&self, i: usize, j: usize, distance: f64) -> f64 {
+    fn calculate_hydrogen_bond_energy(&self, _i: usize, _j: usize, distance: f64) -> f64 {
         // Hydrogen bond potential (12-10 form)
         if distance < 2.5 || distance > 3.5 {
             return 0.0; // Outside hydrogen bond range

@@ -21,7 +21,6 @@ All calculations use exact mathematical formulations - NO approximations or hard
 */
 
 use std::f64::consts::PI;
-use std::collections::{HashMap, HashSet, VecDeque, BTreeMap};
 use ndarray::{Array1, Array2, Array3};
 use num_complex::Complex64;
 use rand::{Rng, thread_rng};
@@ -61,7 +60,7 @@ pub struct KuramotoOscillator {
 
 impl KuramotoOscillator {
     /// Create new oscillator with natural frequency based on residue properties
-    pub fn new(residue_type: &str, hydrophobicity: f64, base_frequency: f64) -> Self {
+    pub fn new(residue_type: &str, _hydrophobicity: f64, base_frequency: f64) -> Self {
         let mut rng = thread_rng();
         
         // Natural frequency depends on residue properties
@@ -87,7 +86,7 @@ impl KuramotoOscillator {
     }
     
     /// Update phase using 4th-order Runge-Kutta integration
-    pub fn update_phase_rk4(&mut self, coupling_term: f64, dt: f64, current_time: f64) {
+    pub fn update_phase_rk4(&mut self, coupling_term: f64, dt: f64, _current_time: f64) {
         let k1 = self.phase_derivative(coupling_term);
         let k2 = self.phase_derivative_at_phase(self.phase + 0.5 * dt * k1, coupling_term);
         let k3 = self.phase_derivative_at_phase(self.phase + 0.5 * dt * k2, coupling_term);
@@ -111,7 +110,7 @@ impl KuramotoOscillator {
     }
     
     /// Phase derivative at specific phase (for RK4)
-    fn phase_derivative_at_phase(&self, phase: f64, coupling_term: f64) -> f64 {
+    fn phase_derivative_at_phase(&self, _phase: f64, coupling_term: f64) -> f64 {
         self.natural_frequency + coupling_term
     }
     
@@ -474,7 +473,7 @@ impl DisaggregaseSystem {
     }
     
     /// 1A.4.8.1: Detect misfolding states
-    pub fn detect_misfolding(&self, oscillator_id: usize, local_order_param: f64, 
+    pub fn detect_misfolding(&self, _oscillator_id: usize, local_order_param: f64, 
                            time_stuck: f64, energy_barrier: f64) -> bool {
         let r_min = 0.3; // Minimum acceptable order parameter
         let t_threshold = 100.0; // Maximum stuck time
@@ -999,7 +998,7 @@ impl TSPChaperoneSystem {
         // Add trigger factor protection
         let protection_strength = self.trigger_factor_system
             .calculate_protection_strength(oscillator_id, self.current_time);
-        coupling_term *= (1.0 - protection_strength);
+        coupling_term *= 1.0 - protection_strength;
         
         // Add disaggregase intervention if needed
         let local_order = self.calculate_local_order_parameter(oscillator_id);

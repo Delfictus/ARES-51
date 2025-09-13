@@ -1,13 +1,21 @@
-// PDB file parser with exact format specification compliance
+// PDB file parser with exact format specification compliance and industrial-grade security
 use crate::geometry::{Structure, Chain, ChainType, Residue, Atom, AminoAcid, StructureMetadata, ExperimentalMethod, HelixRecord, SheetRecord, SheetRegistration, UnitCell};
-use std::fs::File;
+use crate::security::{SecurityValidator, SecurityAuditLog, SecurityError};
+use std::fs::{File, metadata};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::collections::HashMap;
 use std::str::FromStr;
+use log::{info, warn};
 
 /// PDB parser with zero-drift compliance
 pub struct PDBParser;
+
+/// Secure PDB parser with industrial-grade security validation
+pub struct SecurePDBParser {
+    validator: SecurityValidator,
+    audit_log: SecurityAuditLog,
+}
 
 impl PDBParser {
     /// Parse PDB file from path
@@ -81,7 +89,7 @@ impl PDBParser {
                     atom_counter += 1;
 
                     // Get or create chain
-                    let chain = chains.entry(atom.chain_id)
+                    let _chain = chains.entry(atom.chain_id)
                         .or_insert_with(|| Chain::protein(atom.chain_id));
 
                     // Get or create residue
@@ -194,7 +202,7 @@ impl PDBParser {
                     atom_counter += 1;
 
                     // Get or create chain
-                    let chain = chains.entry(atom.chain_id)
+                    let _chain = chains.entry(atom.chain_id)
                         .or_insert_with(|| Chain::protein(atom.chain_id));
 
                     // Get or create residue
@@ -752,6 +760,327 @@ impl PDBParser {
     }
 }
 
+impl SecurePDBParser {
+    /// Create a new secure PDB parser with default security configuration
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            validator: SecurityValidator::new()?,
+            audit_log: SecurityAuditLog::new(),
+        })
+    }
+
+    /// Parse PDB file with comprehensive security validation
+    pub fn parse_file_secure<P: AsRef<Path>>(&mut self, path: P) -> Result<Structure, PDBParseError> {
+        let path_ref = path.as_ref();
+        info!("Starting secure PDB parsing for file: {:?}", path_ref);
+        
+        // Validate file size before opening
+        let file_metadata = metadata(&path_ref).map_err(|e| PDBParseError::Io(e))?;
+        let file_size = file_metadata.len() as usize;
+        
+        self.validator.validate_file_size(file_size, &format!("{:?}", path_ref))?;
+        self.validator.start_operation("secure_file_parsing");
+        
+        // Open file and read with timeout protection
+        let file = File::open(&path_ref)?;
+        let reader = BufReader::new(file);
+        
+        let filename = path_ref.file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("UNKNOWN")
+            .to_string();
+            
+        // Generate input hash for audit trail
+        let file_content = std::fs::read_to_string(&path_ref)?;
+        let input_hash = self.validator.generate_input_hash(file_content.as_bytes());
+        info!("File input hash: {}", input_hash);
+        
+        self.parse_content_secure(&file_content, filename, Some(input_hash))
+    }
+
+    /// Parse PDB from string content with security validation
+    pub fn parse_string_secure(&mut self, content: &str, id: String) -> Result<Structure, PDBParseError> {
+        info!("Starting secure PDB parsing for string content, ID: {}", id);
+        
+        // Validate content size
+        self.validator.validate_file_size(content.len(), "string_input")?;
+        self.validator.start_operation("secure_string_parsing");
+        
+        // Generate input hash
+        let input_hash = self.validator.generate_input_hash(content.as_bytes());
+        
+        self.parse_content_secure(content, id, Some(input_hash))
+    }
+
+    /// Internal secure parsing implementation
+    fn parse_content_secure(&mut self, content: &str, structure_id: String, input_hash: Option<String>) -> Result<Structure, PDBParseError> {
+        self.validator.reset_for_new_structure();
+        
+        let lines = content.lines();
+        let mut structure = Structure::new(structure_id.clone());
+        let mut chains: HashMap<char, Chain> = HashMap::new();
+        let mut current_residue_map: HashMap<(char, i32), Residue> = HashMap::new();
+        let mut atom_counter = 0;
+
+        for (line_num, line) in lines.enumerate() {
+            let line_num = line_num + 1;
+            
+            // Check timeout periodically
+            if line_num % 1000 == 0 {
+                self.validator.check_timeout("secure_parsing")?;
+            }
+
+            // Comprehensive line validation
+            match self.validator.validate_line(line, line_num) {
+                Ok(_) => {},
+                Err(security_error) => {
+                    self.audit_log.log_violation(
+                        "line_validation_failed",
+                        crate::security::RiskLevel::High,
+                        &format!("Line {}: {}", line_num, security_error),
+                        input_hash.clone()
+                    );
+                    return Err(PDBParseError::SecurityViolation(security_error));
+                }
+            }
+
+            // Skip empty lines
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            let record_type = &line[0..6.min(line.len())];
+
+            match record_type {
+                "ATOM  " | "HETATM" => {
+                    // Security: Validate ATOM record before parsing
+                    if line.len() < 80 {
+                        let error = format!("ATOM record too short: {} chars (expected 80)", line.len());
+                        self.audit_log.log_violation(
+                            "atom_record_too_short",
+                            crate::security::RiskLevel::Medium,
+                            &error,
+                            input_hash.clone()
+                        );
+                        return Err(PDBParseError::InvalidFormat(error));
+                    }
+
+                    // Parse atom with security validation
+                    let (atom, residue_name) = self.parse_atom_secure(line, line_num)?;
+                    self.validator.increment_atom_count()?;
+
+                    // Validate chain limits
+                    if !chains.contains_key(&atom.chain_id) {
+                        self.validator.increment_chain_count()?;
+                        let chain_type = if atom.chain_id.is_ascii_uppercase() { 
+                            ChainType::Protein 
+                        } else { 
+                            ChainType::DNA 
+                        };
+                        chains.insert(atom.chain_id, Chain::new(atom.chain_id, chain_type));
+                    }
+
+                    // Security: Track resources
+                    let _chain = chains.get_mut(&atom.chain_id).unwrap();
+                    
+                    // Check if this is a new residue
+                    let residue_key = (atom.chain_id, atom.residue_seq);
+                    if !current_residue_map.contains_key(&residue_key) {
+                        self.validator.increment_residue_count()?;
+                        
+                        // Create new residue with validation
+                        let residue_type = match AminoAcid::from_str(&residue_name) {
+                            Ok(aa) => aa,
+                            Err(_) => {
+                                warn!("Unknown residue type: {}, using Gly", residue_name);
+                                AminoAcid::Gly
+                            }
+                        };
+
+                        let mut residue = Residue::new(atom.residue_seq, residue_type, atom.chain_id, None);
+                        residue.add_atom(atom);
+                        current_residue_map.insert(residue_key, residue);
+                    } else {
+                        let residue = current_residue_map.get_mut(&residue_key).unwrap();
+                        residue.add_atom(atom);
+                    }
+
+                    atom_counter += 1;
+                }
+                "HEADER" => { PDBParser::parse_header(line, &mut structure.metadata)?; },
+                "TITLE " => { PDBParser::parse_title(line, &mut structure.metadata); },
+                "AUTHOR" => { PDBParser::parse_author(line, &mut structure.metadata); },
+                "EXPDTA" => { PDBParser::parse_expdta(line, &mut structure.metadata); },
+                "REMARK" => { PDBParser::parse_remark(line, &mut structure.metadata, &mut structure.space_group); },
+                "CRYST1" => { PDBParser::parse_cryst1(line, &mut structure.unit_cell, &mut structure.space_group)?; },
+                "SEQRES" => { PDBParser::parse_seqres(line, &mut structure)?; },
+                "HELIX " => { PDBParser::parse_helix(line, &mut structure)?; },
+                "SHEET " => { PDBParser::parse_sheet(line, &mut structure)?; },
+                "END   " => break,
+                _ => {
+                    // Log unknown record types but continue parsing
+                    if !record_type.trim().is_empty() {
+                        info!("Skipping unknown record type: '{}'", record_type);
+                    }
+                }
+            }
+        }
+
+        // Final timeout check
+        self.validator.check_timeout("secure_parsing")?;
+
+        // Add all residues to their chains
+        for ((chain_id, _), residue) in current_residue_map {
+            chains.get_mut(&chain_id).unwrap().add_residue(residue);
+        }
+
+        // Add all chains to structure
+        for (_, chain) in chains {
+            structure.add_chain(chain);
+        }
+
+        // Security: Basic structure validation (comprehensive validation will be added later)
+        if structure.chain_count() == 0 {
+            self.audit_log.log_violation(
+                "structure_validation_failed",
+                crate::security::RiskLevel::High,
+                "Structure validation failed: no chains found",
+                input_hash.clone()
+            );
+            return Err(PDBParseError::InvalidFormat("No valid chains found in structure".to_string()));
+        }
+        
+        if atom_counter == 0 {
+            self.audit_log.log_violation(
+                "structure_validation_failed", 
+                crate::security::RiskLevel::High,
+                "Structure validation failed: no atoms found",
+                input_hash.clone()
+            );
+            return Err(PDBParseError::InvalidFormat("No valid atoms found in structure".to_string()));
+        }
+
+        info!("Secure parsing completed successfully. Atoms: {}, Chains: {}", 
+              atom_counter, structure.chain_count());
+        
+        // Log successful parsing
+        self.audit_log.log_violation(
+            "parsing_completed",
+            crate::security::RiskLevel::Low,
+            &format!("Successfully parsed {} atoms in {} chains", atom_counter, structure.chain_count()),
+            input_hash
+        );
+
+        Ok(structure)
+    }
+
+    /// Parse ATOM record with comprehensive security validation
+    fn parse_atom_secure(&mut self, line: &str, line_num: usize) -> Result<(Atom, String), PDBParseError> {
+        // Validate line length exactly
+        if line.len() < 80 {
+            return Err(PDBParseError::InvalidFormat(
+                format!("ATOM line {} too short: {} chars", line_num, line.len())
+            ));
+        }
+
+        // Extract fields with bounds checking
+        let atom_id_str = line.get(6..11).unwrap_or("").trim();
+        let atom_name = self.validator.validate_string_field(
+            line.get(12..16).unwrap_or("").trim(), 
+            "atom_name", 
+            10
+        )?;
+        
+        let residue_name = self.validator.validate_string_field(
+            line.get(17..20).unwrap_or("").trim(),
+            "residue_name",
+            5
+        )?;
+
+        let chain_id = line.get(21..22).unwrap_or(" ").chars().next().unwrap_or(' ');
+        
+        let residue_seq_str = line.get(22..26).unwrap_or("").trim();
+
+        // Secure coordinate parsing
+        let x = self.validator.validate_coordinate(
+            line.get(30..38).unwrap_or("").trim(),
+            "x_coordinate"
+        )?;
+        let y = self.validator.validate_coordinate(
+            line.get(38..46).unwrap_or("").trim(),
+            "y_coordinate"
+        )?;
+        let z = self.validator.validate_coordinate(
+            line.get(46..54).unwrap_or("").trim(),
+            "z_coordinate"
+        )?;
+
+        // Secure integer parsing
+        let atom_id: u32 = atom_id_str.parse()
+            .map_err(|_| PDBParseError::InvalidFormat(
+                format!("Invalid atom ID '{}' at line {}", atom_id_str, line_num)
+            ))?;
+
+        let residue_seq: i32 = residue_seq_str.parse()
+            .map_err(|_| PDBParseError::InvalidFormat(
+                format!("Invalid residue sequence '{}' at line {}", residue_seq_str, line_num)
+            ))?;
+
+        // Validate ranges
+        if atom_id > 99999 {
+            return Err(PDBParseError::SecurityViolation(
+                crate::security::SecurityError::NumericalBounds {
+                    value: atom_id as f64,
+                    field_name: "atom_id".to_string(),
+                    min_allowed: 1.0,
+                    max_allowed: 99999.0,
+                }
+            ));
+        }
+
+        if residue_seq.abs() > 9999 {
+            return Err(PDBParseError::SecurityViolation(
+                crate::security::SecurityError::NumericalBounds {
+                    value: residue_seq as f64,
+                    field_name: "residue_seq".to_string(),
+                    min_allowed: -9999.0,
+                    max_allowed: 9999.0,
+                }
+            ));
+        }
+
+        // Determine element from atom name
+        let element = crate::geometry::element::element_from_pdb_name(&atom_name);
+
+        let coords = crate::geometry::vector3::Vector3::new(x, y, z);
+        let atom = Atom::new(atom_id.try_into().unwrap(), atom_name.clone(), coords, element, chain_id, residue_seq);
+
+        Ok((atom, residue_name))
+    }
+
+    /// Get security audit report
+    pub fn get_security_report(&self) -> String {
+        self.audit_log.generate_report()
+    }
+
+    /// Check if any critical security violations occurred
+    pub fn has_critical_violations(&self) -> bool {
+        self.audit_log.has_critical_violations()
+    }
+
+    /// Reset security state for new parsing operation
+    pub fn reset_security_state(&mut self) {
+        self.validator.reset_for_new_structure();
+        self.audit_log = SecurityAuditLog::new();
+    }
+}
+
+impl Default for SecurePDBParser {
+    fn default() -> Self {
+        Self::new().expect("Failed to create SecurePDBParser with default configuration")
+    }
+}
+
 /// PDB parsing errors
 #[derive(Debug)]
 pub enum PDBParseError {
@@ -760,11 +1089,23 @@ pub enum PDBParseError {
     StructureValidation(Vec<crate::geometry::structure::StructureValidationError>),
     InvalidFormat(String),
     MissingData(String),
+    /// Security violation detected during parsing
+    SecurityViolation(SecurityError),
+    /// Operation timed out for security reasons
+    Timeout(String),
+    /// Input rejected due to security policy
+    InputRejected(String),
 }
 
 impl From<std::io::Error> for PDBParseError {
     fn from(err: std::io::Error) -> Self {
         PDBParseError::Io(err)
+    }
+}
+
+impl From<SecurityError> for PDBParseError {
+    fn from(err: SecurityError) -> Self {
+        PDBParseError::SecurityViolation(err)
     }
 }
 
@@ -778,11 +1119,18 @@ impl std::fmt::Display for PDBParseError {
             }
             PDBParseError::InvalidFormat(msg) => write!(f, "Invalid PDB format: {}", msg),
             PDBParseError::MissingData(msg) => write!(f, "Missing required data: {}", msg),
+            PDBParseError::SecurityViolation(err) => write!(f, "Security violation: {}", err),
+            PDBParseError::Timeout(msg) => write!(f, "Operation timeout: {}", msg),
+            PDBParseError::InputRejected(msg) => write!(f, "Input rejected: {}", msg),
         }
     }
 }
 
 impl std::error::Error for PDBParseError {}
+
+// Include security tests
+#[cfg(test)]
+mod security_tests;
 
 #[cfg(test)]
 mod tests {
