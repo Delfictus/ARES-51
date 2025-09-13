@@ -883,7 +883,7 @@ mod tests {
 
     #[test]
     fn test_chain_management() {
-        let mut structure = create_test_structure();
+        let structure = create_test_structure();
         
         assert_eq!(structure.chain_count(), 1);
         assert!(structure.has_chain('A'));

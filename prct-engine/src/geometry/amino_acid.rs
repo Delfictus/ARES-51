@@ -414,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_secondary_structure_propensity() {
-        let (helix, sheet) = AminoAcid::Ala.secondary_structure_propensity();
+        let (helix, _sheet) = AminoAcid::Ala.secondary_structure_propensity();
         assert!(helix > 1.0); // Ala favors helices
         
         let (helix, sheet) = AminoAcid::Val.secondary_structure_propensity();

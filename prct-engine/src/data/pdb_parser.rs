@@ -783,7 +783,7 @@ impl SecurePDBParser {
         
         // Open file and read with timeout protection
         let file = File::open(&path_ref)?;
-        let reader = BufReader::new(file);
+        let _reader = BufReader::new(file);
         
         let filename = path_ref.file_stem()
             .and_then(|s| s.to_str())

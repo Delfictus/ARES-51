@@ -1,7 +1,7 @@
 // Comprehensive security tests for industrial-grade validation
 #[cfg(test)]
 mod security_tests {
-    use super::*;
+    // Specific imports instead of wildcard
     use crate::security::{SecurityValidator, SecurityError, SecurityConfig, RiskLevel, SecurityAuditLog};
     use std::time::Duration;
 
