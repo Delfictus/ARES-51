@@ -409,7 +409,8 @@ mod tests {
     fn test_one_to_three_conversion() {
         assert_eq!(one_to_three('A'), Some(AminoAcid::Ala));
         assert_eq!(one_to_three('w'), Some(AminoAcid::Trp));
-        assert_eq!(one_to_three('Z'), None);
+        assert_eq!(one_to_three('Z'), Some(AminoAcid::Glx)); // Z is valid (ambiguous Gln/Glu)
+        assert_eq!(one_to_three('J'), None); // J is not a valid amino acid code
     }
 
     #[test]

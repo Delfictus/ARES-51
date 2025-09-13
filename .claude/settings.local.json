@@ -31,7 +31,13 @@
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_mixed_secondary_structure -- --exact --nocapture)",
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test security::tests::security_tests::test_line_validation_xss_patterns -- --exact --nocapture)",
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_mixed_secondary_structure)",
-      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test security::tests::security_tests::test_line_validation_xss_patterns)"
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test security::tests::security_tests::test_line_validation_xss_patterns)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::chain::tests::test_geometric_properties -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::ramachandran::tests::test_backbone_dihedral_calculation geometry::amino_acid::tests::test_one_to_three_conversion geometry::atom::tests::test_element_from_atom_name geometry::chain::tests::test_geometric_properties geometry::element::tests::test_pdb_name_parsing -- --exact)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::ramachandran::tests::test_backbone_dihedral_calculation -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::amino_acid::tests::test_one_to_three_conversion -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::atom::tests::test_element_from_atom_name -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test geometry::element::tests::test_pdb_name_parsing -- --exact --nocapture)"
     ],
     "deny": [],
     "ask": []

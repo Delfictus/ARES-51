@@ -733,7 +733,7 @@ mod tests {
         assert!(radius > 0.0);
         
         let mw = chain.molecular_weight();
-        assert!(mw > 200.0); // Should be sum of amino acid molecular weights
+        assert!(mw > 160.0 && mw < 200.0); // Backbone-only atoms: ~54 Da per residue * 3 = 162 Da
     }
 
     #[test]

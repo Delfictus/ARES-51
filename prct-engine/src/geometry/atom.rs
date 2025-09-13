@@ -247,7 +247,7 @@ impl Element {
         let trimmed = name.trim();
         
         // Handle common PDB atom naming conventions
-        if trimmed.starts_with('H') {
+        if trimmed.starts_with('H') || trimmed.chars().nth(0).map_or(false, |c| c.is_ascii_digit()) && trimmed.contains('H') {
             Element::H
         } else if trimmed.starts_with('C') {
             Element::C

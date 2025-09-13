@@ -288,19 +288,31 @@ pub fn element_from_pdb_name(atom_name: &str) -> Element {
     // PDB atom names can be left or right justified
     let name = atom_name.trim();
     
-    // Handle common cases first
+    // Handle special cases first (metal atoms that might be confused)
+    if name.starts_with("FE") { return Element::Fe; }
+    if name.starts_with("ZN") { return Element::Zn; }
+    if name.starts_with("MG") { return Element::Mg; }
+    if name.starts_with("CU") { return Element::Cu; }
+    
+    // Handle PDB atom names - "CA" in PDB is carbon alpha, not calcium
+    if name.starts_with("CA") || name.starts_with("CB") || name.starts_with("CG") || name.starts_with("CD") || name.starts_with("CE") || name.starts_with("CZ") { 
+        return Element::C; 
+    }
+    
+    // Check if first two characters are element symbol (longer first to avoid F matching before FE)
     if name.len() >= 2 {
-        // Check if first character is element symbol
-        let first_char = &name[0..1];
-        if let Ok(element) = Element::from_str(first_char) {
+        let first_two = &name[0..2];
+        if let Ok(element) = Element::from_str(first_two) {
             if element != Element::Unknown {
                 return element;
             }
         }
-        
-        // Check if first two characters are element symbol
-        let first_two = &name[0..2];
-        if let Ok(element) = Element::from_str(first_two) {
+    }
+    
+    // Check if first character is element symbol
+    if name.len() >= 1 {
+        let first_char = &name[0..1];
+        if let Ok(element) = Element::from_str(first_char) {
             if element != Element::Unknown {
                 return element;
             }
