@@ -171,6 +171,11 @@ impl Element {
         )
     }
 
+    /// Check if element is hydrogen
+    pub fn is_hydrogen(&self) -> bool {
+        matches!(self, Element::H)
+    }
+
     /// Get all biological elements
     pub fn biological_elements() -> Vec<Element> {
         vec![

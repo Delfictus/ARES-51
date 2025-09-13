@@ -471,7 +471,203 @@ impl Structure {
             }
         }
 
+        // Enhanced validation checks
+        
+        // 1. Coordinate bounds checking
+        self.check_coordinate_bounds(&mut errors);
+        
+        // 2. Missing atom detection
+        self.check_missing_atoms(&mut errors);
+        
+        // 3. Geometric consistency validation
+        self.check_geometric_consistency(&mut errors);
+        
+        // 4. Backbone geometry validation
+        self.check_backbone_geometry(&mut errors);
+
         errors
+    }
+
+    /// Check coordinate bounds (reasonable limits: -999 to 999 Å)
+    fn check_coordinate_bounds(&self, errors: &mut Vec<StructureValidationError>) {
+        const MAX_COORD: f64 = 999.0;
+        
+        for chain in self.chains.values() {
+            for residue in &chain.residues {
+                for (_atom_name, atom) in &residue.atoms {
+                    let pos = atom.coords;
+                    if pos.x.abs() > MAX_COORD || pos.y.abs() > MAX_COORD || pos.z.abs() > MAX_COORD {
+                        errors.push(StructureValidationError::CoordinatesOutOfBounds(pos.x, pos.y, pos.z));
+                        return; // Only report first occurrence to avoid spam
+                    }
+                }
+            }
+        }
+    }
+
+    /// Check for missing atoms (protein residues should have N, CA, C backbone atoms)
+    fn check_missing_atoms(&self, errors: &mut Vec<StructureValidationError>) {
+        let mut missing_atoms = 0;
+        let mut total_expected = 0;
+        
+        for chain in self.protein_chains() {
+            for residue in chain.residues() {
+                total_expected += 3; // N, CA, C
+                
+                let has_n = residue.get_atom("N").is_some();
+                let has_ca = residue.get_atom("CA").is_some();
+                let has_c = residue.get_atom("C").is_some();
+                
+                if !has_n { missing_atoms += 1; }
+                if !has_ca { missing_atoms += 1; }
+                if !has_c { missing_atoms += 1; }
+            }
+        }
+        
+        if total_expected > 0 {
+            let missing_percentage = 100.0 * missing_atoms as f64 / total_expected as f64;
+            if missing_percentage > 10.0 { // More than 10% missing is concerning
+                errors.push(StructureValidationError::TooManyMissingAtoms(missing_atoms, total_expected));
+            }
+        }
+    }
+
+    /// Check geometric consistency (atom clashes and bond lengths)
+    fn check_geometric_consistency(&self, errors: &mut Vec<StructureValidationError>) {
+        let mut clashes = 0;
+        let mut bad_bonds = 0;
+        
+        // Collect all atoms for clash detection
+        let mut all_atoms = Vec::new();
+        for chain in self.chains.values() {
+            for residue in &chain.residues {
+                for (_atom_name, atom) in &residue.atoms {
+                    all_atoms.push((atom, chain.id, residue.seq_num));
+                }
+            }
+        }
+        
+        // Check for severe atom clashes (< 1.0 Å between non-bonded heavy atoms)
+        for i in 0..all_atoms.len() {
+            for j in (i+1)..all_atoms.len() {
+                let (atom1, chain1, res1) = &all_atoms[i];
+                let (atom2, chain2, res2) = &all_atoms[j];
+                
+                // Skip bonded atoms (same residue or adjacent residues)
+                if chain1 == chain2 && (res1 == res2 || (res1 - res2).abs() <= 1) {
+                    continue;
+                }
+                
+                // Skip hydrogens
+                if atom1.element.is_hydrogen() || atom2.element.is_hydrogen() {
+                    continue;
+                }
+                
+                let distance = atom1.coords.distance(&atom2.coords);
+                if distance < 1.0 {
+                    clashes += 1;
+                }
+            }
+        }
+        
+        // Check backbone bond lengths (N-CA: ~1.46Å, CA-C: ~1.52Å, C-N: ~1.33Å)
+        for chain in self.protein_chains() {
+            for residue in chain.residues() {
+                if let (Some(n), Some(ca)) = (residue.get_atom("N"), residue.get_atom("CA")) {
+                    let dist = n.coords.distance(&ca.coords);
+                    if dist < 1.2 || dist > 1.8 { // Expected ~1.46Å ± 0.26Å
+                        bad_bonds += 1;
+                    }
+                }
+                
+                if let (Some(ca), Some(c)) = (residue.get_atom("CA"), residue.get_atom("C")) {
+                    let dist = ca.coords.distance(&c.coords);
+                    if dist < 1.2 || dist > 1.8 { // Expected ~1.52Å ± 0.26Å
+                        bad_bonds += 1;
+                    }
+                }
+            }
+        }
+        
+        if clashes > 10 {
+            errors.push(StructureValidationError::AtomClashes(clashes));
+        }
+        
+        if bad_bonds > 5 {
+            errors.push(StructureValidationError::UnreasonableBondLengths(bad_bonds));
+        }
+    }
+
+    /// Check backbone geometry (phi/psi angles)
+    fn check_backbone_geometry(&self, errors: &mut Vec<StructureValidationError>) {
+        let mut total_residues = 0;
+        let mut poor_geometry = 0;
+        
+        for chain in self.protein_chains() {
+            let residues = chain.residues();
+            
+            for i in 1..(residues.len()-1) {
+                let prev = &residues[i-1];
+                let curr = &residues[i];
+                let next = &residues[i+1];
+                
+                // Calculate phi and psi angles
+                if let (Some(phi), Some(psi)) = (
+                    self.calculate_phi_angle(prev, curr),
+                    self.calculate_psi_angle(curr, next)
+                ) {
+                    total_residues += 1;
+                    
+                    // Very basic Ramachandran check (simplified)
+                    // Poor geometry if angles are in obviously disallowed regions
+                    let phi_deg = phi.to_degrees();
+                    let psi_deg = psi.to_degrees();
+                    
+                    // Extremely crude check - just flag very bad angles
+                    if phi_deg > 0.0 && psi_deg > 0.0 && 
+                       !(phi_deg > 120.0 && phi_deg < 180.0 && psi_deg > 120.0 && psi_deg < 180.0) {
+                        poor_geometry += 1;
+                    }
+                }
+            }
+        }
+        
+        if total_residues > 0 {
+            let poor_percentage = 100.0 * poor_geometry as f64 / total_residues as f64;
+            if poor_percentage > 25.0 { // More than 25% poor geometry is concerning
+                errors.push(StructureValidationError::PoorBackboneGeometry(poor_percentage));
+            }
+        }
+    }
+
+    /// Calculate phi dihedral angle (C-1, N, CA, C)
+    fn calculate_phi_angle(&self, prev: &crate::geometry::residue::Residue, curr: &crate::geometry::residue::Residue) -> Option<f64> {
+        let c_prev = prev.get_atom("C")?;
+        let n_curr = curr.get_atom("N")?;
+        let ca_curr = curr.get_atom("CA")?;
+        let c_curr = curr.get_atom("C")?;
+        
+        Some(crate::geometry::vector3::calculate_dihedral_angle(
+            &c_prev.coords,
+            &n_curr.coords,
+            &ca_curr.coords,
+            &c_curr.coords
+        ))
+    }
+
+    /// Calculate psi dihedral angle (N, CA, C, N+1)
+    fn calculate_psi_angle(&self, curr: &crate::geometry::residue::Residue, next: &crate::geometry::residue::Residue) -> Option<f64> {
+        let n_curr = curr.get_atom("N")?;
+        let ca_curr = curr.get_atom("CA")?;
+        let c_curr = curr.get_atom("C")?;
+        let n_next = next.get_atom("N")?;
+        
+        Some(crate::geometry::vector3::calculate_dihedral_angle(
+            &n_curr.coords,
+            &ca_curr.coords,
+            &c_curr.coords,
+            &n_next.coords
+        ))
     }
 
     /// Get structure quality metrics
@@ -547,6 +743,11 @@ pub enum StructureValidationError {
     UnreasonableResolution(f64),
     UnreasonableRFactor(f64),
     MissingMetadata,
+    CoordinatesOutOfBounds(f64, f64, f64), // x, y, z coordinates beyond reasonable limits
+    TooManyMissingAtoms(usize, usize), // missing_count, total_expected
+    AtomClashes(usize), // number of severe atom clashes detected
+    UnreasonableBondLengths(usize), // number of bonds with unreasonable lengths
+    PoorBackboneGeometry(f64), // percentage of residues with poor phi/psi angles
 }
 
 impl fmt::Display for StructureValidationError {
@@ -566,6 +767,22 @@ impl fmt::Display for StructureValidationError {
             }
             StructureValidationError::MissingMetadata => {
                 write!(f, "Missing required metadata")
+            }
+            StructureValidationError::CoordinatesOutOfBounds(x, y, z) => {
+                write!(f, "Coordinates out of bounds: ({:.2}, {:.2}, {:.2})", x, y, z)
+            }
+            StructureValidationError::TooManyMissingAtoms(missing, total) => {
+                write!(f, "Too many missing atoms: {}/{} ({:.1}%)", 
+                       missing, total, 100.0 * *missing as f64 / *total as f64)
+            }
+            StructureValidationError::AtomClashes(count) => {
+                write!(f, "Detected {} severe atom clashes", count)
+            }
+            StructureValidationError::UnreasonableBondLengths(count) => {
+                write!(f, "Found {} bonds with unreasonable lengths", count)
+            }
+            StructureValidationError::PoorBackboneGeometry(percentage) => {
+                write!(f, "Poor backbone geometry in {:.1}% of residues", percentage)
             }
         }
     }

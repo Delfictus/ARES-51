@@ -1,61 +1,331 @@
-# CapoAI Implementation Roadmap - ZERO DRIFT GUARANTEE
-## Following Anti-Drift Methodology from Screenshot
+# CapoAI PRCT Algorithm Implementation Roadmap
+## ZERO DRIFT GUARANTEE - GRANULAR TASK BREAKDOWN
 
-### Phase 1: Foundation Data Acquisition (Days 1-3)
+### Implementation Authority
+- **Author**: Ididia Serfaty <ididiaserfaty@protonmail.com>
+- **Creation Date**: 2025-09-12
+- **Anti-Drift Compliance**: MANDATORY
+- **Completion Standard**: 100% PRODUCTION READY
 
-#### EXACT SPECIFICATIONS REQUIRED:
-```
-1. PDB Database Download (REAL DATA ONLY)
-   Command: rsync -rlpt -v -z --delete rsync.rcsb.org::ftp_data/structures/divided/pdb/ ./datasets-vault/protein-structures/pdb/
-   Size: ~500GB compressed, ~2TB uncompressed
-   Quality Filter: Resolution <3.0Å, R-factor <0.25
-   Expected: 180,000+ high-quality structures
+---
 
-2. CASP Dataset Collection
-   Source: https://predictioncenter.org/download_area/CASP15/
-   Files: T1040-T1189 targets (150 hard targets)
-   Format: Native structures + prediction templates
-   Validation: Manual verification of all coordinate files
+## GRANULAR TODO BREAKDOWN - PHASE-BY-PHASE IMPLEMENTATION
 
-3. AlphaFold Database Subset  
-   Priority: Human proteome (20,000+ proteins)
-   Confidence Filter: >90% very high confidence regions only
-   Cross-reference: Must match UniProt sequences exactly
-```
+**Target**: Complete mathematical foundation with ZERO approximations
 
-#### CONCRETE CONSTRAINTS:
-- Storage: 10TB NVMe SSD space allocated
-- Processing: Parallel download using 8 threads
-- Validation: MD5 checksum verification for all files
-- Backup: 3-2-1 rule implementation (3 copies, 2 media, 1 offsite)
+#### Task 1A.1: Hamiltonian Operator Implementation
+**File**: `prct-engine/src/core/hamiltonian.rs`
+**Compliance Requirements**:
+- ✅ 4th-order Runge-Kutta integration (NO Euler method shortcuts)
+- ✅ Adaptive step size control with error tolerance <1e-8
+- ✅ Energy conservation validation within machine precision
+- ✅ Quantum mechanical commutation relations preserved
+- ✅ Complex number arithmetic with exact precision
 
-#### RUNNABLE REQUIREMENT:
+**Subtasks**:
+1. Implement `kinetic_energy_operator()` with exact ℏ²/2m terms
+2. Implement `potential_energy_operator()` with Lennard-Jones + Coulomb
+3. Implement `coupling_operator()` with time-dependent Jij coefficients  
+4. Implement `resonance_operator()` with exact eigenstate formulation
+5. Validate against analytical hydrogen atom solutions
+
+**Acceptance Criteria**:
 ```rust
-fn main() {
-    println!("🧬 CapoAI Dataset Acquisition - Live Progress Report");
-    
-    let mut downloader = DatasetDownloader::new();
-    let pdb_stats = downloader.download_pdb_complete();
-    let casp_stats = downloader.download_casp_targets();
-    let alphafold_stats = downloader.download_alphafold_human();
-    
-    println!("📊 Dataset Acquisition Complete:");
-    println!("  PDB structures: {} files, {:.1}GB", pdb_stats.file_count, pdb_stats.size_gb);
-    println!("  CASP targets: {} structures verified", casp_stats.target_count);
-    println!("  AlphaFold predictions: {} proteins loaded", alphafold_stats.protein_count);
-    
-    // REAL validation - no stubs
-    let validation_report = validate_dataset_completeness(&downloader.datasets);
-    assert!(validation_report.completeness_percentage > 95.0);
-    assert!(validation_report.quality_score > 0.9);
-    
-    println!("✅ All datasets validated - ZERO missing data");
+#[test]
+fn test_hamiltonian_energy_conservation() {
+    let initial_energy = hamiltonian.total_energy(&state);
+    let final_state = hamiltonian.evolve(&state, 1000.0); // 1000 steps
+    let final_energy = hamiltonian.total_energy(&final_state);
+    assert!((initial_energy - final_energy).abs() < 1e-12);
 }
 ```
 
-### Phase 2: PRCT Core Algorithm Implementation (Days 4-7)
+#### Task 1A.2: Phase Resonance Function Implementation
+**File**: `prct-engine/src/core/phase_resonance.rs`
+**Compliance Requirements**:
+- ✅ Exact trigonometric calculations (NO Taylor approximations)
+- ✅ Phase coherence measurement with correlation functions
+- ✅ Frequency domain analysis with FFT validation
+- ✅ Coupling strength normalization Σα²ij = 1
+- ✅ Phase difference calculation with wrap-around handling
 
-#### ONE COMPONENT PER REQUEST:
+**Subtasks**:
+1. Implement `calculate_coupling_strength(Eij, E_total)` with exact normalization
+2. Implement `angular_frequency(dij, d0, f0)` with logarithmic scaling
+3. Implement `phase_difference(psi_i, psi_j)` with complex arithmetic
+4. Implement `ramachandran_constraint(ri, cj)` with CHARMM36 potentials
+5. Validate against known protein secondary structures
+
+**Acceptance Criteria**:
+```rust
+#[test] 
+fn test_phase_resonance_orthogonality() {
+    let phi_alpha = calculate_phase_resonance(&protein, Helix);
+    let phi_beta = calculate_phase_resonance(&protein, Sheet);  
+    let overlap = complex_dot_product(&phi_alpha, &phi_beta);
+    assert!(overlap.norm() < 1e-10); // Orthogonal states
+}
+```
+
+#### Task 1A.3: Chromatic Graph Optimization Implementation
+**File**: `prct-engine/src/optimization/chromatic.rs`
+**Compliance Requirements**:
+- ✅ Brooks' theorem upper bound enforcement χ(G) ≤ Δ(G) + 1
+- ✅ Clique lower bound validation χ(G) ≥ ω(G)
+- ✅ Independence bound verification χ(G) ≥ n/α(G)
+- ✅ Phase coherence penalty with Lagrange multipliers
+- ✅ Convergence detection with objective function monitoring
+
+**Subtasks**:
+1. Implement `chromatic_number_bounds(graph)` with all three bounds
+2. Implement `phase_coherence_penalty(coloring, lambda)` with complex phases
+3. Implement `constraint_satisfaction(graph, k_colors)` with backtracking
+4. Implement `optimization_step(current, gradient, learning_rate)` 
+5. Validate on known graph coloring benchmarks
+
+**Acceptance Criteria**:
+```rust
+#[test]
+fn test_chromatic_bounds_compliance() {
+    let graph = create_test_graph(100, 0.3); // 100 nodes, 30% edges
+    let chi = compute_chromatic_number(&graph);
+    let delta = graph.max_degree();
+    let omega = graph.clique_number();
+    assert!(chi >= omega && chi <= delta + 1);
+}
+```
+
+#### Task 1A.4: TSP Phase Dynamics Implementation  
+**File**: `prct-engine/src/optimization/tsp_phase.rs`
+**Compliance Requirements**:
+- ✅ Kuramoto coupling model with sine interactions
+- ✅ Path construction probability with Boltzmann distribution
+- ✅ Pheromone update rules with evaporation
+- ✅ Phase synchronization detection with order parameter
+- ✅ Tour validation with Hamiltonian cycle verification
+
+**Subtasks**:
+1. Implement `kuramoto_coupling(phi_i, phi_j, K)` with sine function
+2. Implement `path_probability(distance, phase_diff, temperature)`
+3. Implement `pheromone_update(tau, evaporation_rate, ant_solutions)`
+4. Implement `phase_synchronization_order(phases)` with complex average
+5. Validate on standard TSP benchmarks (Berlin52, etc.)
+
+**Acceptance Criteria**:
+```rust
+#[test]
+fn test_tsp_phase_convergence() {
+    let cities = load_berlin52_instance();
+    let mut tsp_solver = TSPPhaseSolver::new(&cities);
+    let tour = tsp_solver.solve(1000); // 1000 iterations
+    let known_optimal = 7542;
+    assert!((tour.length() - known_optimal) / known_optimal < 0.02); // <2% error
+}
+```
+
+#### Task 1A.5: Mathematical Integration Validation
+**File**: `prct-engine/src/validation/analytical.rs`
+**Compliance Requirements**:
+- ✅ Hydrogen atom eigenstate reproduction
+- ✅ Harmonic oscillator phase evolution
+- ✅ Two-level system Rabi oscillations
+- ✅ Spin-1/2 precession dynamics
+- ✅ Classical limit verification (ℏ→0)
+
+**Subtasks**:
+1. Implement hydrogen atom test cases with exact solutions
+2. Implement harmonic oscillator with known frequencies
+3. Implement two-level system with Rabi frequency
+4. Implement spin precession with magnetic field
+5. Verify classical mechanics emergence in macroscopic limit
+
+---
+
+**Target**: Complete dataset integration with validation
+
+#### Task 1B.1: PDB Structure Parser Implementation
+**File**: `prct-engine/src/data/pdb_parser.rs`
+**Compliance Requirements**:
+- ✅ Complete ATOM record parsing with coordinate validation
+- ✅ SEQRES sequence extraction with residue mapping
+- ✅ HELIX/SHEET secondary structure annotation
+- ✅ CRYST1 unit cell parameter extraction
+- ✅ Error handling for malformed PDB files
+
+**Subtasks**:
+1. Implement `parse_atom_records()` with coordinate bounds checking
+2. Implement `parse_seqres()` with amino acid validation
+3. Implement `parse_secondary_structure()` with helix/sheet detection
+4. Implement `validate_structure()` with geometry checks
+5. Create test suite with 100+ real PDB structures
+
+**Acceptance Criteria**:
+```rust
+#[test]
+fn test_pdb_parser_accuracy() {
+    let structure = parse_pdb_file("test_data/1BDD.pdb")?;
+    assert_eq!(structure.residue_count(), 47);
+    assert_eq!(structure.atom_count(), 589);
+    assert!(structure.resolution() < 2.0); // High resolution
+    assert!(structure.r_factor() < 0.25); // Reliable structure
+}
+```
+
+#### Task 1B.2: Ramachandran Constraint Implementation
+**File**: `prct-engine/src/geometry/ramachandran.rs`
+**Compliance Requirements**:
+- ✅ CHARMM36 parameter implementation with exact coefficients
+- ✅ Phi/psi angle calculation from atomic coordinates
+- ✅ Energy penalty computation for outlier conformations
+- ✅ Gradient calculation for optimization
+- ✅ Allowed region classification (core, allowed, outlier)
+
+**Subtasks**:
+1. Implement `calculate_dihedral_angles(coords)` with exact geometry
+2. Implement `ramachandran_energy(phi, psi)` with CHARMM36 terms
+3. Implement `energy_gradient(phi, psi)` for optimization
+4. Implement `classify_conformation(phi, psi)` with region boundaries
+5. Validate against experimental protein structures
+
+#### Task 1B.3: Contact Map Generation Implementation
+**File**: `prct-engine/src/geometry/contacts.rs`
+**Compliance Requirements**:
+- ✅ 8Å distance cutoff with exact Euclidean calculation
+- ✅ All-atom contact detection (not just Cα)
+- ✅ Sparse matrix storage for memory efficiency
+- ✅ Contact order calculation for topology
+- ✅ Hydrogen bond detection with geometric criteria
+
+**Subtasks**:
+1. Implement `euclidean_distance(atom1, atom2)` with exact calculation
+2. Implement `generate_contact_map(structure, cutoff)` efficiently
+3. Implement `sparse_contact_storage()` with compressed format
+4. Implement `contact_order_calculation()` for long-range interactions
+5. Optimize for proteins up to 2000 residues
+
+#### Task 1B.4: Energy Landscape Calculation Implementation
+**File**: `prct-engine/src/energy/landscape.rs`
+**Compliance Requirements**:
+- ✅ Lennard-Jones potential with exact ε and σ parameters
+- ✅ Coulomb electrostatics with dielectric screening
+- ✅ SASA solvation with atomic surface parameters
+- ✅ Hydrogen bonding with directional dependence
+- ✅ Torsional potentials from CHARMM36 force field
+
+**Subtasks**:
+1. Implement `lennard_jones_energy(r, epsilon, sigma)`
+2. Implement `coulomb_energy(q1, q2, r, dielectric)`
+3. Implement `solvation_energy(structure, sasa_params)`
+4. Implement `hydrogen_bond_energy(donor, acceptor, angle)`
+5. Validate total energy against CHARMM calculations
+
+#### Task 1B.5: CASP Target Data Loader Implementation
+**File**: `prct-engine/src/data/casp_loader.rs`
+**Compliance Requirements**:
+- ✅ CASP13/14/15 target sequence parsing
+- ✅ Native structure coordinate extraction
+- ✅ Difficulty classification validation
+- ✅ Template availability assessment
+- ✅ Benchmark metadata extraction
+
+**Subtasks**:
+1. Implement FASTA sequence parser with validation
+2. Implement native structure loader with PDB integration
+3. Implement difficulty classifier with GDT-TS thresholds
+4. Implement template search with sequence identity cutoffs
+5. Create automated CASP dataset updates
+
+---
+
+### Phase 1C: GPU Acceleration Infrastructure (Days 7-9)
+**Target**: Optimized performance for RTX 4060 system
+
+#### Task 1C.1: CUDA Kernel Optimization Implementation
+**File**: `prct-engine/src/gpu/kernels.cu`
+**Compliance Requirements**:
+- ✅ Phase calculation kernels with shared memory optimization
+- ✅ Matrix operations with cuBLAS integration
+- ✅ FFT operations with cuFFT for frequency analysis
+- ✅ Reduction kernels for energy summation
+- ✅ Memory coalescing for optimal bandwidth
+
+**Subtasks**:
+1. Implement phase_resonance_kernel with 32-thread warps
+2. Implement matrix_multiply_kernel with tile optimization
+3. Implement fft_analysis_kernel for frequency domain
+4. Implement energy_reduction_kernel with parallel reduction
+5. Profile and optimize for RTX 4060 architecture
+
+#### Task 1C.2: Memory Management Implementation
+**File**: `prct-engine/src/gpu/memory.rs`
+**Compliance Requirements**:
+- ✅ 8GB VRAM limit enforcement with overflow detection
+- ✅ Host-device memory transfer optimization
+- ✅ Memory pool allocation for reduced fragmentation
+- ✅ Garbage collection for intermediate results
+- ✅ Memory usage profiling and reporting
+
+**Subtasks**:
+1. Implement memory pool with fixed-size allocations
+2. Implement automatic memory limit detection
+3. Implement host-pinned memory for faster transfers
+4. Implement memory usage tracking and alerts
+5. Create memory pressure handling with graceful degradation
+
+#### Task 1C.3: Batch Processing System Implementation
+**File**: `prct-engine/src/parallel/batch.rs`
+**Compliance Requirements**:
+- ✅ Parallel protein processing with load balancing
+- ✅ Work-stealing queue for dynamic scheduling
+- ✅ Results aggregation with proper synchronization
+- ✅ Progress reporting with completion estimates
+- ✅ Error handling with partial batch recovery
+
+**Subtasks**:
+1. Implement work-stealing queue with atomic operations
+2. Implement load balancer with protein size consideration
+3. Implement result collector with thread-safe operations
+4. Implement progress tracker with ETA calculation
+5. Optimize for 6-core Ryzen 5 9600X CPU
+
+#### Task 1C.4: Performance Profiling Implementation
+**File**: `prct-engine/src/profiling/metrics.rs`
+**Compliance Requirements**:
+- ✅ Sub-millisecond timing with rdtsc instruction
+- ✅ GPU utilization monitoring with NVML
+- ✅ Memory bandwidth measurement
+- ✅ Cache hit rate analysis
+- ✅ Performance regression detection
+
+**Subtasks**:
+1. Implement high-resolution timer with CPU cycles
+2. Implement GPU metrics collection via CUDA APIs
+3. Implement memory bandwidth benchmarking
+4. Implement cache performance analysis
+5. Create performance regression test suite
+
+#### Task 1C.5: RTX 4060 Optimization Implementation
+**File**: `prct-engine/src/gpu/rtx4060.rs`
+**Compliance Requirements**:
+- ✅ Mixed precision FP16/FP32 with accuracy preservation
+- ✅ Tensor core utilization for matrix operations
+- ✅ Memory hierarchy optimization (L1/L2 cache)
+- ✅ Warp-level optimization for SIMT execution
+- ✅ Power efficiency monitoring
+
+**Subtasks**:
+1. Implement FP16 precision for intermediate calculations
+2. Implement tensor core matrix multiplication
+3. Implement cache-friendly memory access patterns
+4. Implement warp-synchronous programming
+5. Profile power consumption and thermal throttling
+
+---
+
+## PHASE 2: VALIDATION & INTEGRATION (Days 10-14)
+
+### Phase 2A: Validation Framework Implementation
+**Target**: Comprehensive accuracy validation against experimental data
 **Component 1: Phase Resonance Engine**
 ```rust
 // File: prct-engine/src/phase_resonance.rs

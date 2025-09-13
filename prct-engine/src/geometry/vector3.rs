@@ -128,6 +128,48 @@ impl Vector3 {
     }
 }
 
+/// Calculate dihedral angle between four points (in radians)
+/// Uses the IUPAC convention: angle from 0 to π is positive, from 0 to -π is negative
+pub fn calculate_dihedral_angle(p1: &Vector3, p2: &Vector3, p3: &Vector3, p4: &Vector3) -> f64 {
+    // Vector from p2 to p1
+    let b1 = *p1 - *p2;
+    // Vector from p2 to p3  
+    let b2 = *p3 - *p2;
+    // Vector from p3 to p4
+    let b3 = *p4 - *p3;
+    
+    // Cross products
+    let c1 = b1.cross(&b2);
+    let c2 = b2.cross(&b3);
+    
+    // Magnitudes
+    let c1_mag = c1.magnitude();
+    let c2_mag = c2.magnitude();
+    
+    if c1_mag < f64::EPSILON || c2_mag < f64::EPSILON {
+        return 0.0; // Degenerate case
+    }
+    
+    // Normalized cross products
+    let n1 = c1 / c1_mag;
+    let n2 = c2 / c2_mag;
+    
+    // Dot product for cosine
+    let cos_angle = n1.dot(&n2).clamp(-1.0, 1.0);
+    
+    // Cross product for sign
+    let cross = n1.cross(&n2);
+    let sin_sign = cross.dot(&(b2 / b2.magnitude()));
+    
+    let angle = cos_angle.acos();
+    
+    if sin_sign < 0.0 {
+        -angle
+    } else {
+        angle
+    }
+}
+
 /// Geometric functions using Vector3
 impl Vector3 {
     /// Calculate dihedral angle between four points
