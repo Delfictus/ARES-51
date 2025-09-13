@@ -1476,14 +1476,14 @@ END"#;
             assert_eq!(residue.secondary_structure, SecondaryStructure::Helix);
         }
         
-        // 3-10 helix residues
+        // Pi helix residues (class 5)
         if let Some(residue) = chain.get_residue(35) {
             use crate::geometry::residue::SecondaryStructure;
-            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix310);
+            assert_eq!(residue.secondary_structure, SecondaryStructure::HelixPi);
         }
         if let Some(residue) = chain.get_residue(40) {
             use crate::geometry::residue::SecondaryStructure;
-            assert_eq!(residue.secondary_structure, SecondaryStructure::Helix310);
+            assert_eq!(residue.secondary_structure, SecondaryStructure::HelixPi);
         }
         
         // Sheet residues

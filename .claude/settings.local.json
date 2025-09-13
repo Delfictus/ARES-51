@@ -27,7 +27,11 @@
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test core::hamiltonian::tests::test_prct_phase_resonance_integration -- --exact --nocapture)",
       "Bash(git commit:*)",
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_secondary_structure_assignment -- --exact --nocapture)",
-      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_seqres_parsing -- --exact --nocapture)"
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_seqres_parsing -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_mixed_secondary_structure -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test security::tests::security_tests::test_line_validation_xss_patterns -- --exact --nocapture)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test data::pdb_parser::tests::test_mixed_secondary_structure)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test security::tests::security_tests::test_line_validation_xss_patterns)"
     ],
     "deny": [],
     "ask": []

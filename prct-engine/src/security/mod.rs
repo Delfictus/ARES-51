@@ -163,8 +163,8 @@ impl SecurityValidator {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
             config: SecurityConfig::default(),
-            sql_injection_pattern: Regex::new(r"(?i)(union|select|insert|update|delete|drop|exec|script)")?,
-            xss_pattern: Regex::new(r"(?i)(<script|javascript:|vbscript:|data:)")?,
+            sql_injection_pattern: Regex::new(r"(?i)\b(union|select|insert|update|delete|drop|exec)\b")?,
+            xss_pattern: Regex::new(r"(?i)(<script|javascript:|vbscript:|data:|onerror=|onload=|onclick=)")?,
             path_traversal_pattern: Regex::new(r"(\.\./|\.\.\\|\.\./\\|\.\.\\//)")?,
             control_char_pattern: Regex::new(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]")?,
             operation_start_time: None,
