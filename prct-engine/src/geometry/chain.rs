@@ -18,8 +18,11 @@ pub struct Chain {
     /// Chain type (protein, DNA, RNA, etc.)
     pub chain_type: ChainType,
     
-    /// Chain sequence as string
+    /// Chain sequence as string (from ATOM records)
     pub sequence: String,
+    
+    /// SEQRES sequence from PDB header (authoritative sequence)
+    pub seqres_sequence: Option<String>,
     
     /// Chain length (number of residues)
     pub length: usize,
@@ -37,6 +40,28 @@ pub enum ChainType {
     Unknown,
 }
 
+/// Validation result comparing SEQRES and ATOM-derived sequences
+#[derive(Debug, Clone, PartialEq)]
+pub enum SequenceValidation {
+    /// No SEQRES sequence available for comparison
+    NoSeqres,
+    
+    /// Perfect match between SEQRES and ATOM sequences
+    Perfect,
+    
+    /// ATOM sequence is missing residues compared to SEQRES
+    MissingResidues(usize),
+    
+    /// Sequences are inconsistent
+    Inconsistent {
+        seqres_length: usize,
+        atom_length: usize,
+        matches: usize,
+        mismatches: usize,
+        length_difference: usize,
+    },
+}
+
 impl Chain {
     /// Create new empty chain
     pub fn new(id: char, chain_type: ChainType) -> Self {
@@ -46,6 +71,7 @@ impl Chain {
             residue_map: HashMap::new(),
             chain_type,
             sequence: String::new(),
+            seqres_sequence: None,
             length: 0,
         }
     }
@@ -227,6 +253,63 @@ impl Chain {
         self.residues.iter()
             .map(|residue| residue.amino_acid.three_letter().to_string())
             .collect()
+    }
+
+    /// Set SEQRES sequence from PDB header
+    pub fn set_seqres_sequence(&mut self, seqres: String) {
+        self.seqres_sequence = Some(seqres);
+    }
+
+    /// Get SEQRES sequence (authoritative sequence from PDB header)
+    pub fn seqres_sequence(&self) -> Option<&str> {
+        self.seqres_sequence.as_deref()
+    }
+
+    /// Get authoritative sequence (SEQRES if available, otherwise from ATOM records)
+    pub fn authoritative_sequence(&self) -> &str {
+        self.seqres_sequence.as_deref().unwrap_or(&self.sequence)
+    }
+
+    /// Validate ATOM-derived sequence against SEQRES sequence
+    pub fn validate_sequence_consistency(&self) -> SequenceValidation {
+        let Some(seqres) = &self.seqres_sequence else {
+            return SequenceValidation::NoSeqres;
+        };
+
+        let atom_seq = &self.sequence;
+        
+        if seqres == atom_seq {
+            return SequenceValidation::Perfect;
+        }
+
+        // Check if ATOM sequence is a subsequence of SEQRES (common case)
+        if seqres.contains(atom_seq) {
+            let missing_count = seqres.len() - atom_seq.len();
+            return SequenceValidation::MissingResidues(missing_count);
+        }
+
+        // Count mismatches
+        let mut matches = 0;
+        let mut mismatches = 0;
+        let min_len = seqres.len().min(atom_seq.len());
+        
+        for (seqres_char, atom_char) in seqres.chars().zip(atom_seq.chars()) {
+            if seqres_char == atom_char {
+                matches += 1;
+            } else {
+                mismatches += 1;
+            }
+        }
+
+        let length_diff = (seqres.len() as i32 - atom_seq.len() as i32).abs() as usize;
+        
+        SequenceValidation::Inconsistent {
+            seqres_length: seqres.len(),
+            atom_length: atom_seq.len(),
+            matches,
+            mismatches,
+            length_difference: length_diff,
+        }
     }
 
     /// Update sequence string from residues
