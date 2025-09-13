@@ -27,6 +27,7 @@ use serde::{Deserialize, Serialize};
 // Core mathematical modules
 pub mod core;
 pub mod data;
+pub mod geometry;
 pub mod optimization;
 pub mod validation;
 
