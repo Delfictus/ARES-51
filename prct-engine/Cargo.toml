@@ -24,9 +24,8 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4"] }
 rayon = "1.7"
 ndarray = { version = "0.15", features = ["rayon", "serde"] }
-nalgebra = { version = "0.32", features = ["std", "rand"] }
-statrs = "0.16"
-bio = "1.4"
+nalgebra = { version = "0.33", features = ["std", "rand"] }
+statrs = "0.17"
 petgraph = "0.6"
 num-complex = "0.4"
 rand = "0.8"

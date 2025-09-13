@@ -31,6 +31,7 @@ pub mod geometry;
 pub mod optimization;
 pub mod validation;
 pub mod security;
+pub mod gpu; // H100 PCIe GPU acceleration module
 
 // Legacy modules (to be refactored) - COMMENTED OUT FOR INITIAL BUILD
 // pub mod dataset_downloader;
@@ -89,6 +90,27 @@ pub enum PRCTError {
     
     #[error("Security error: {0}")]
     Security(#[from] crate::security::SecurityError),
+    
+    #[error("GPU memory exhausted")]
+    GPUMemoryExhausted,
+    
+    #[error("Invalid memory pool")]
+    InvalidMemoryPool,
+    
+    #[error("Pool memory exhausted")]
+    PoolMemoryExhausted,
+    
+    #[error("System RAM exhausted")]
+    SystemRAMExhausted,
+    
+    #[error("Insufficient HBM3 memory")]
+    InsufficientHBM3Memory,
+    
+    #[error("CUDA kernel execution failed: {0}")]
+    CudaKernelFailed(String),
+    
+    #[error("Tensor operation failed: {0}")]
+    TensorOperationFailed(String),
     
     #[error("General error: {0}")]
     General(#[from] anyhow::Error),
