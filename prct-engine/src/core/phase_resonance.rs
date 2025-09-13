@@ -151,20 +151,31 @@ impl PhaseResonance {
         }
     }
     
-    /// Initialize wavefunctions for phase calculations
+    /// Initialize wavefunctions for phase calculations using physical principles
     fn initialize_wavefunctions(&mut self) {
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
-        
-        // Initialize with random complex coefficients (to be evolved)
+        // Initialize with deterministic complex coefficients based on distance and energy
         for i in 0..self.n_residues {
             for j in 0..self.n_residues {
-                let real_part = rng.gen_range(-1.0..1.0);
-                let imag_part = rng.gen_range(-1.0..1.0);
-                self.wavefunctions[[i, j]] = Complex64::new(real_part, imag_part);
+                if i == j {
+                    // Diagonal elements: identity for normalization
+                    self.wavefunctions[[i, j]] = Complex64::new(1.0, 0.0);
+                } else {
+                    // Off-diagonal: based on distance and sequence separation
+                    let distance = self.distance_matrix[[i, j]];
+                    let seq_separation = (i as i32 - j as i32).abs() as f64;
+                    
+                    // Real part: exponential decay with distance (physical coupling)
+                    let real_part = (-distance / self.reference_distance).exp() / (1.0 + seq_separation);
+                    
+                    // Imaginary part: phase based on sequence separation and distance
+                    let phase = 2.0 * PI * seq_separation / self.n_residues as f64 + distance / (10.0 * self.reference_distance);
+                    let imag_part = real_part * phase.sin();
+                    
+                    self.wavefunctions[[i, j]] = Complex64::new(real_part, imag_part);
+                }
             }
             
-            // Normalize each row
+            // Normalize each row to maintain unitarity
             let row_sum: f64 = self.wavefunctions.row(i).iter()
                 .map(|z| z.norm_sqr()).sum();
             
