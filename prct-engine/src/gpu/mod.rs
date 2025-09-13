@@ -4,10 +4,17 @@
 pub mod h100_kernels;
 pub mod memory_manager;
 pub mod tensor_ops;
+pub mod time_types;
+// pub mod advanced_memory;     // Re-disabled - needs interface fixes
+pub mod performance_profiler;
+pub mod benchmark_suite;
 
 pub use h100_kernels::*;
 pub use memory_manager::*;
 pub use tensor_ops::*;
+// pub use advanced_memory::*;
+pub use performance_profiler::*;
+pub use benchmark_suite::*;
 
 use crate::PRCTError;
 
