@@ -59,11 +59,9 @@ pub struct KuramotoOscillator {
 }
 
 impl KuramotoOscillator {
-    /// Create new oscillator with natural frequency based on residue properties
-    pub fn new(residue_type: &str, _hydrophobicity: f64, base_frequency: f64) -> Self {
-        let mut rng = thread_rng();
-        
-        // Natural frequency depends on residue properties
+    /// Create new oscillator with natural frequency based on residue properties (deterministic)
+    pub fn new(residue_type: &str, hydrophobicity: f64, base_frequency: f64, residue_index: usize) -> Self {
+        // Natural frequency depends on residue properties (deterministic calculation)
         let hydrophobic_bias = match residue_type {
             "ALA" | "VAL" | "LEU" | "ILE" | "MET" | "PHE" | "TRP" | "PRO" => 0.2,
             "SER" | "THR" | "CYS" | "TYR" | "ASN" | "GLN" => 0.0,
@@ -72,10 +70,17 @@ impl KuramotoOscillator {
             _ => 0.0,
         };
         
-        let natural_frequency = base_frequency + hydrophobic_bias + rng.gen_range(-0.05..0.05);
+        // Deterministic perturbation based on residue properties
+        let sequence_perturbation = 0.01 * ((residue_index as f64 * PI / 4.0).sin());
+        let hydrophobic_perturbation = hydrophobicity * 0.02;
+        
+        let natural_frequency = base_frequency + hydrophobic_bias + sequence_perturbation + hydrophobic_perturbation;
+        
+        // Initial phase based on residue position and properties (deterministic)
+        let initial_phase = (2.0 * PI * residue_index as f64 / 20.0 + hydrophobicity * PI / 2.0) % (2.0 * PI);
         
         Self {
-            phase: rng.gen_range(0.0..2.0 * PI),
+            phase: initial_phase,
             natural_frequency,
             coupling_strength: 1.0,
             phase_history: Vec::with_capacity(1000),
@@ -890,8 +895,8 @@ impl TSPChaperoneSystem {
         let n_cities = cities.len();
         let mut oscillators = Vec::with_capacity(n_cities);
         
-        for city in &cities {
-            oscillators.push(KuramotoOscillator::new(&city.residue_type, city.hydrophobicity, 1.0));
+        for (idx, city) in cities.iter().enumerate() {
+            oscillators.push(KuramotoOscillator::new(&city.residue_type, city.hydrophobicity, 1.0, idx));
         }
         
         let mut distance_matrix = Array2::zeros((n_cities, n_cities));
