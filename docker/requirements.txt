@@ -1,0 +1,29 @@
+# PRCT Python Dependencies
+# Pinned versions for reproducibility
+
+# Core scientific computing
+numpy==1.24.3
+scipy==1.11.1
+pandas==2.0.3
+
+# Deep learning with CUDA 12.1 support
+--index-url https://download.pytorch.org/whl/cu121
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+torchaudio==2.5.1+cu121
+
+# Visualization
+matplotlib==3.7.2
+seaborn==0.12.2
+plotly==5.15.0
+
+# Utilities
+tqdm==4.65.0
+click==8.1.6
+rich==13.4.2
+pyyaml==6.0.1
+python-dotenv==1.0.0
+
+# Testing
+pytest==7.4.0
+pytest-benchmark==4.0.0
