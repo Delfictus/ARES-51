@@ -20,6 +20,8 @@ Author: Ididia Serfaty
 Classification: TOP SECRET
 */
 
+#![allow(dead_code)]
+
 use std::fmt;
 use thiserror::Error;
 use serde::{Deserialize, Serialize};
@@ -111,6 +113,9 @@ pub enum PRCTError {
     
     #[error("Tensor operation failed: {0}")]
     TensorOperationFailed(String),
+    
+    #[error("Feature not implemented: {0}")]
+    NotImplemented(String),
     
     #[error("General error: {0}")]
     General(#[from] anyhow::Error),

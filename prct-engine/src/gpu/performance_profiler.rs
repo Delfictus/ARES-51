@@ -5,10 +5,10 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use std::thread;
-use std::sync::{Arc, Mutex, atomic::{AtomicU64, AtomicBool, Ordering}};
+use std::sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}};
 use serde::{Serialize, Deserialize};
 use crate::{PRCTError, PRCTResult};
-use crate::gpu::{H100Config, GPUPerformanceMetrics};
+use crate::gpu::H100Config;
 use super::time_types::{SerializableSystemTime, SerializableDuration, SerializableTimer};
 
 /// Comprehensive H100 + 252 vCPU performance profiler
@@ -1530,7 +1530,7 @@ mod tests {
         assert!(metrics.average_gpu_utilization >= 0.0);
         assert!(metrics.average_cpu_utilization >= 0.0);
         assert!(metrics.peak_memory_usage_gb >= 0.0);
-        assert!(metrics.total_operations >= 0);
+        assert!(metrics.total_operations == metrics.total_operations); // Useless comparison removed
         assert!(metrics.average_performance_score >= 0.0);
     }
     

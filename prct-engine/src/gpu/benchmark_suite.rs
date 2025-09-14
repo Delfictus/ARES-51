@@ -5,10 +5,9 @@
 use std::time::{Duration, Instant};
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
-use crate::{PRCTError, PRCTResult, PRCTEngine};
+use crate::{PRCTResult, PRCTEngine};
 use crate::gpu::{H100PerformanceProfiler, HamiltonianComputationType};
 use crate::ProteinStructure;
-use ndarray::Array1;
 
 /// Comprehensive H100 benchmark suite for PRCT algorithm validation
 #[derive(Debug)]
