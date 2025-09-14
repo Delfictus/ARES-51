@@ -64,7 +64,8 @@
       "Bash(podman system prune:*)",
       "Bash(podman tag:*)",
       "Bash(podman push:*)",
-      "Bash(export CARGO_TARGET_DIR=/tmp/prct-build)"
+      "Bash(export CARGO_TARGET_DIR=/tmp/prct-build)",
+      "Bash(export CARGO_TARGET_DIR=/tmp/prct-target)"
     ],
     "deny": [],
     "ask": []

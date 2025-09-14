@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 use clap::{Arg, Command};
-use prct_engine::data::CASP16Loader;
+use prct_engine::data::CASPLoader;
 use prct_engine::PRCTResult;
 use tokio;
 use tracing::{info, Level};
@@ -63,7 +63,7 @@ async fn main() -> PRCTResult<()> {
     info!("🔐 Verify checksums: {}", verify_checksums);
     
     // Create CASP16 loader
-    let mut loader = CASP16Loader::new(output_dir.clone(), false)?;
+    let mut loader = CASPLoader::new(output_dir.clone())?;
     
     // Download targets
     match specific_targets {

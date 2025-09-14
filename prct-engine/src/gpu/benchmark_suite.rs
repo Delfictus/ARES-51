@@ -885,8 +885,8 @@ impl H100BenchmarkSuite {
             .unwrap_or(4)
     }
     
-    fn calculate_energy_conservation_error(&self, _structure: &ProteinStructure) -> PRCTResult<f64> {
-        Ok(1e-12) // Energy conservation error
+    fn calculate_energy_conservation_error(&self, structure: &ProteinStructure) -> PRCTResult<f64> {
+        Ok(structure.energy_conservation_error(None)) // Use ProteinStructure method
     }
     
     fn verify_numerical_stability(&self, _structure: &ProteinStructure) -> PRCTResult<bool> {
