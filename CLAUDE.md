@@ -487,3 +487,6 @@ free -h | grep "32Gi"  # Verify 32GB RAM
 ---
 
 *This CLAUDE.md file represents the complete implementation strategy for the revolutionary PRCT algorithm. When ready to begin implementation, initialize development environment and begin with Phase 1A Task 1A.1 from the GRANULAR_TODO_BREAKDOWN.md. Success in this endeavor will fundamentally transform computational biology and establish CapoAI as the dominant force in protein structure prediction.*
+- We are using Podman instead of Docker
+- My DockerHub username is delfictus
+- When building new images change the previous versions tag to a v number and the new one as latest

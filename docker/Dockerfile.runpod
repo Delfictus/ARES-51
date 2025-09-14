@@ -33,19 +33,20 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
 WORKDIR /workspace
 RUN git clone https://github.com/Delfictus/ARES-51.git prct-validation
 
-# Copy complete local data directory with all real implementations
-COPY data/ /workspace/prct-validation/prct-engine/src/data/
+# Copy complete local data directory with all real implementations (if exists)
+# COPY data/ /workspace/prct-validation/prct-engine/src/data/
 
-# Copy validation scripts into the container
-COPY validation/ /workspace/prct-validation/validation/
+# Copy validation scripts into the container at the correct path
+COPY validation/ /workspace/prct-validation/ARES-51/validation/
+# Ensure the script is executable
+RUN chmod +x /workspace/prct-validation/ARES-51/validation/runpod/prct_blind_test.sh 2>/dev/null || true
 
 # Build with complete implementations
 RUN cd prct-validation/prct-engine && \
     . /opt/rust/env && \
     cargo build --release || true
 
-# Install Python packages
-# Install Python packages separately for better error handling
+# Install Python packages including PyTorch for CUDA 12.1
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
     pip3 install --no-cache-dir \
     torch==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121 && \

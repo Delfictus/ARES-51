@@ -26,7 +26,7 @@ ALL resonance frequencies calculated from distance scaling laws.
 use ndarray::Array2;
 use num_complex::Complex64;
 use std::f64::consts::PI;
-use crate::data::ForceFieldParams;
+use crate::data::force_field::ForceFieldParams;
 
 /// Phase resonance field for protein folding dynamics
 #[derive(Debug, Clone)]

@@ -58,7 +58,13 @@
       "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo build --bins --release --quiet)",
       "Bash(/tmp/capo-build/release/benchmark-suite --help)",
       "Bash(/tmp/capo-build/release/prct-validator:*)",
-      "Bash(/tmp/capo-build/release/report-generator:*)"
+      "Bash(/tmp/capo-build/release/report-generator:*)",
+      "Bash(docker build:*)",
+      "Bash(podman build:*)",
+      "Bash(podman system prune:*)",
+      "Bash(podman tag:*)",
+      "Bash(podman push:*)",
+      "Bash(export CARGO_TARGET_DIR=/tmp/prct-build)"
     ],
     "deny": [],
     "ask": []

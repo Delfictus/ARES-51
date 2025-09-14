@@ -175,7 +175,7 @@ impl EnergyMinimizer {
     pub fn new(energy_function: EnergyFunctionType) -> Result<Self, SecurityError> {
         let validator = SecurityValidator::new()?;
         let force_field = ForceFieldParams::default();
-        let ramachandran = RamachandranConstraints::new()?;
+        let ramachandran = RamachandranConstraints::new();
         
         let convergence_config = ConvergenceConfig {
             energy_tolerance: 1e-6,        // 0.000001 kcal/mol

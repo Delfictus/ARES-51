@@ -28,8 +28,8 @@ use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use crate::core::{Hamiltonian, PhaseResonance};
 use crate::optimization::{SparseGraph, ChromaticOptimizer, KuramotoOscillator};
-use crate::data::{ForceFieldParams, ContactMapGenerator, ContactMap};
-use crate::geometry::Structure;
+use crate::data::{force_field::ForceFieldParams, contact_map::{ContactMapGenerator, ContactMap}};
+use crate::geometry::structure::Structure;
 
 /// Complete PRCT algorithm integration engine
 #[derive(Debug)]
@@ -155,7 +155,7 @@ impl PRCTEngine {
         phase_resonance.set_temperature(config.temperature);
         
         // Generate contact graph
-        let mut contact_generator = ContactMapGenerator::new(config.contact_cutoff)?;
+        let mut contact_generator = ContactMapGenerator::new();
         let contact_map = contact_generator.generate_contact_map(&structure)?;
         let contact_graph = Self::build_contact_graph(&contact_map)?;
         

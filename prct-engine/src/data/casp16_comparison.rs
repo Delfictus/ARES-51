@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::fs;
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
-use crate::data::{GDTTSScore, TargetDifficulty, BlindTestProtocol};
+use crate::data::{GDTTSScore, DifficultyLevel, BlindTestProtocol};
 
 /// CASP16 official results comparison framework
 /// Performs statistical analysis against official CASP16 assessments
@@ -44,7 +44,7 @@ pub struct OfficialCASPResult {
     pub target_id: String,
     
     /// Target difficulty category
-    pub difficulty: TargetDifficulty,
+    pub difficulty: DifficultyLevel,
     
     /// Official GDT-TS scores by assessment method
     pub gdt_scores: HashMap<String, f64>, // method_name -> gdt_ts_score
@@ -203,7 +203,7 @@ pub struct TargetComparison {
     pub target_id: String,
     
     /// Target difficulty
-    pub difficulty: TargetDifficulty,
+    pub difficulty: DifficultyLevel,
     
     /// PRCT GDT-TS score
     pub prct_gdt_ts: f64,
@@ -336,10 +336,10 @@ impl CASP16ComparisonFramework {
                 .ok_or_else(|| anyhow!("Missing difficulty on line {}", line_count))?;
             
             let difficulty = match *difficulty_str {
-                "FM" => TargetDifficulty::FM,
-                "TBM" => TargetDifficulty::TBM,
-                "TR" => TargetDifficulty::TR,
-                "MD" => TargetDifficulty::MD,
+                "Easy" => DifficultyLevel::Easy,
+                "Medium" => DifficultyLevel::Medium,
+                "Hard" => DifficultyLevel::Hard,
+                "VeryHard" => DifficultyLevel::VeryHard,
                 _ => {
                     eprintln!("Unknown difficulty '{}' for target {}, skipping", difficulty_str, target_id);
                     continue;
@@ -1101,7 +1101,7 @@ mod tests {
     fn test_success_level_classification() {
         let comparison = TargetComparison {
             target_id: "T1104".to_string(),
-            difficulty: TargetDifficulty::FM,
+            difficulty: DifficultyLevel::Hard,
             prct_gdt_ts: 70.0,
             casp_median_gdt_ts: 45.0,
             casp_best_gdt_ts: 68.0,

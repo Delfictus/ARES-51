@@ -160,17 +160,17 @@ impl PRCTEngine {
         // Phase 1: Initialize molecular coordinates (simple model for now)
         let positions = self.initialize_coordinates(sequence)?;
         let masses = self.get_atomic_masses(sequence)?;
-        let force_field = ForceFieldParams::new();
+        let force_field = data::force_field::ForceFieldParams::new();
         
         // Phase 2: Create Hamiltonian operator with exact physics
-        let mut hamiltonian = Hamiltonian::new(positions.clone(), masses, force_field.clone())?;
+        let mut hamiltonian = core::hamiltonian::Hamiltonian::new(positions.clone(), masses, force_field.clone())?;
         
         // Phase 3: Calculate ground state 
-        let ground_state = calculate_ground_state(&mut hamiltonian);
+        let ground_state = core::hamiltonian::calculate_ground_state(&mut hamiltonian);
         let _ground_energy = hamiltonian.total_energy(&ground_state);
         
         // Phase 4: Initialize phase resonance field
-        let mut phase_resonance = PhaseResonance::new(&positions, sequence, &force_field);
+        let mut phase_resonance = core::phase_resonance::PhaseResonance::new(&positions, sequence, &force_field);
         
         // Phase 5: Calculate phase coherence
         let coherence = phase_resonance.phase_coherence(0.0);
@@ -242,10 +242,11 @@ impl PRCTEngine {
         
         for i in 0..n_residues {
             let base_idx = i * 4;
-            masses[base_idx] = AtomicMass::get("N");     // N
-            masses[base_idx + 1] = AtomicMass::get("C"); // CA
-            masses[base_idx + 2] = AtomicMass::get("C"); // C
-            masses[base_idx + 3] = AtomicMass::get("O"); // O
+            let atomic_data = data::atomic_data::AtomicMass::new();
+            masses[base_idx] = atomic_data.get("N").unwrap_or(14.007);     // N
+            masses[base_idx + 1] = atomic_data.get("C").unwrap_or(12.011); // CA
+            masses[base_idx + 2] = atomic_data.get("C").unwrap_or(12.011); // C
+            masses[base_idx + 3] = atomic_data.get("O").unwrap_or(15.999); // O
         }
         
         Ok(masses)
@@ -261,7 +262,7 @@ impl PRCTEngine {
         let dt = 0.01; // Time step
         
         // Start with ground state
-        let mut state = calculate_ground_state(hamiltonian);
+        let mut state = core::hamiltonian::calculate_ground_state(hamiltonian);
         
         for iteration in 0..max_iterations {
             // Evolve Hamiltonian
