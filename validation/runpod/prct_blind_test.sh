@@ -58,7 +58,7 @@ fi
 # Check Python environment
 echo "" | tee -a "$LOG_FILE"
 echo "Python Environment:" | tee -a "$LOG_FILE"
-python3 -c "import torch; print(f'PyTorch: {torch.__version__}')" | tee -a "$LOG_FILE"
+python3 -c "try: import torch; print(f'PyTorch: {torch.__version__}'); except ImportError: print('PyTorch: Not installed (using CPU fallback)')" | tee -a "$LOG_FILE"
 python3 -c "import numpy; print(f'NumPy: {numpy.__version__}')" | tee -a "$LOG_FILE"
 python3 -c "import scipy; print(f'SciPy: {scipy.__version__}')" | tee -a "$LOG_FILE"
 
@@ -113,9 +113,16 @@ NO HARDCODED VALUES - All computed from physics
 
 import json
 import time
-import torch
 import numpy as np
 from pathlib import Path
+
+try:
+    import torch
+    TORCH_AVAILABLE = torch.cuda.is_available()
+    GPU_NAME = torch.cuda.get_device_name(0) if TORCH_AVAILABLE else 'CPU'
+except ImportError:
+    TORCH_AVAILABLE = False
+    GPU_NAME = 'CPU (PyTorch not available)'
 
 def validate_prct_algorithm():
     """Execute PRCT algorithm on CASP targets"""
@@ -129,8 +136,8 @@ def validate_prct_algorithm():
     results = {
         'validation_metadata': {
             'timestamp': time.time(),
-            'gpu_info': torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU',
-            'cuda_available': torch.cuda.is_available(),
+            'gpu_info': GPU_NAME,
+            'cuda_available': TORCH_AVAILABLE,
             'algorithm_version': 'PRCT-v1.2-real-charmm36'
         },
         'target_predictions': []
