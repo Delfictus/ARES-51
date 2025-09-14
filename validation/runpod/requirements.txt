@@ -1,0 +1,4 @@
+# RunPod Deployment Dependencies
+requests>=2.31.0
+python-dotenv>=1.0.0
+paramiko>=3.3.1  # For SSH connections
