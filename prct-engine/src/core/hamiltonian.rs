@@ -945,8 +945,8 @@ impl Hamiltonian {
     
     /// Calculate Coulomb potential with Debye screening
     fn calculate_coulomb_potential(&self, i: usize, j: usize, r: f64) -> f64 {
-        let _qi = 0.0; // Default partial charge - would be determined from atom types
-        let _qj = 0.0;
+        let qi = 0.0; // Default partial charge - would be determined from atom types
+        let qj = 0.0;
         
         // Debye screening length in water (3.04 Å at 300K, 0.1M ionic strength)
         let kappa = 1.0 / 3.04; // Å⁻¹

@@ -156,7 +156,16 @@ impl PRCTEngine {
         
         // Generate contact graph
         let mut contact_generator = ContactMapGenerator::new();
-        let contact_map = contact_generator.generate_contact_map(&structure)?;
+
+        // Collect all residues from all chains
+        let mut all_residues = Vec::new();
+        for chain in structure.chains() {
+            for residue in chain.residues() {
+                all_residues.push(residue);
+            }
+        }
+
+        let contact_map = contact_generator.generate_contact_map(&all_residues);
         let contact_graph = Self::build_contact_graph(&contact_map)?;
         
         // Initialize chromatic optimizer
@@ -376,13 +385,16 @@ impl PRCTEngine {
     
     fn build_contact_graph(contact_map: &ContactMap) -> Result<SparseGraph, PRCTError> {
         let mut edges = Vec::new();
-        
+
         // Use contact map's internal contact detection
-        let n_residues = contact_map.contact_matrix.nrows();
+        let contact_matrix = contact_map.contact_matrix();
+        let distance_matrix = contact_map.distance_matrix();
+        let n_residues = contact_matrix.nrows();
+
         for i in 0..n_residues {
             for j in (i+1)..n_residues {
-                if contact_map.contact_matrix[[i, j]] > 0 {
-                    let distance = contact_map.distance_matrix[[i, j]];
+                if contact_matrix[[i, j]] > 0 {
+                    let distance = distance_matrix[[i, j]];
                     edges.push((i, j, distance));
                 }
             }
