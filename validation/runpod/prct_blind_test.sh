@@ -44,7 +44,7 @@ fi
 # Check PRCT library
 echo "" | tee -a "$LOG_FILE"
 echo "PRCT Library Status:" | tee -a "$LOG_FILE"
-cd /workspace/prct-validation/prct-engine
+cd /workspace/prct-validation/CAPO-AI/prct-engine
 
 if [ -f "target/release/libprct_engine.rlib" ] || [ -f "/tmp/prct-build/release/libprct_engine.rlib" ]; then
     echo -e "${GREEN}✓${NC} PRCT core library found" | tee -a "$LOG_FILE"
@@ -100,7 +100,7 @@ echo "" | tee -a "$LOG_FILE"
 echo -e "${BLUE}🔬 PRCT Algorithm Execution${NC}" | tee -a "$LOG_FILE"
 echo "----------------------------------------" | tee -a "$LOG_FILE"
 
-cd /workspace/prct-validation/prct-engine
+cd /workspace/prct-validation/CAPO-AI/prct-engine
 
 # Create Python validation script
 cat > "$RESULTS_DIR/prct_validation.py" << 'PYTHON'
