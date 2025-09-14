@@ -29,20 +29,15 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     --profile default \
     --no-modify-path
 
-# Clone repository and apply complete data modules
+# Copy complete local codebase with all data modules
 WORKDIR /workspace
-RUN git clone https://github.com/Delfictus/ARES-51.git prct-validation
+COPY . /workspace/prct-validation/CAPO-AI/
 
-# Copy complete local data directory with all real implementations (if exists)
-# COPY data/ /workspace/prct-validation/prct-engine/src/data/
-
-# Copy validation scripts into the container at the correct path
-COPY validation/ /workspace/prct-validation/ARES-51/validation/
 # Ensure the script is executable
-RUN chmod +x /workspace/prct-validation/ARES-51/validation/runpod/prct_blind_test.sh 2>/dev/null || true
+RUN chmod +x /workspace/prct-validation/CAPO-AI/validation/runpod/prct_blind_test.sh 2>/dev/null || true
 
 # Build with complete implementations
-RUN cd prct-validation/prct-engine && \
+RUN cd prct-validation/CAPO-AI/prct-engine && \
     . /opt/rust/env && \
     cargo build --release || true
 
@@ -57,7 +52,7 @@ RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
     matplotlib==3.7.2
 
 # Set working directory
-WORKDIR /workspace/prct-validation
+WORKDIR /workspace/prct-validation/CAPO-AI
 
 # RunPod expects this - keeps container running
 CMD ["sleep", "infinity"]
