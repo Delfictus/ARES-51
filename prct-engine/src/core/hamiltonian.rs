@@ -924,7 +924,7 @@ impl Hamiltonian {
     }
     
     /// Calculate Lennard-Jones potential with exact CHARMM36 parameters
-    fn calculate_lj_potential(&self, i: usize, j: usize, r: f64) -> f64 {
+    fn calculate_lj_potential(&self, _i: usize, _j: usize, r: f64) -> f64 {
         let lj_params_i = self.force_field.get_lj_params("CA").unwrap();
         let lj_params_j = self.force_field.get_lj_params("CA").unwrap();
         let sigma_i = lj_params_i.sigma;
@@ -944,7 +944,7 @@ impl Hamiltonian {
     }
     
     /// Calculate Coulomb potential with Debye screening
-    fn calculate_coulomb_potential(&self, i: usize, j: usize, r: f64) -> f64 {
+    fn calculate_coulomb_potential(&self, _i: usize, _j: usize, r: f64) -> f64 {
         let qi = 0.0; // Default partial charge - would be determined from atom types
         let qj = 0.0;
         
@@ -960,7 +960,7 @@ impl Hamiltonian {
     }
     
     /// Calculate van der Waals correction terms
-    fn calculate_vdw_correction(&self, i: usize, j: usize, r: f64) -> f64 {
+    fn calculate_vdw_correction(&self, _i: usize, _j: usize, r: f64) -> f64 {
         // C6 and C8 dispersion coefficients (atom-type dependent)
         let c6_ij: f64 = 100.0; // Default C6 dispersion coefficient
         let c8_ij: f64 = 1000.0; // Default C8 dispersion coefficient

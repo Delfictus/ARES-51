@@ -157,15 +157,40 @@ impl PRCTEngine {
         // Generate contact graph
         let mut contact_generator = ContactMapGenerator::new();
 
-        // Collect all residues from all chains
-        let mut all_residues = Vec::new();
+        // Convert geometry::Residue to contact_map::Residue
+        let mut contact_residues = Vec::new();
+        let mut residue_index = 0;
+
         for chain in structure.chains() {
             for residue in chain.residues() {
-                all_residues.push(residue);
+                // Extract CA coordinates (required for contact map)
+                if let Some(ca_atom) = residue.atoms().find(|atom| atom.name() == "CA") {
+                    let ca_coords = (ca_atom.x(), ca_atom.y(), ca_atom.z());
+
+                    // CB coordinates (or CA for glycine)
+                    let cb_coords = if residue.residue_type() == "GLY" {
+                        ca_coords
+                    } else {
+                        residue.atoms()
+                            .find(|atom| atom.name() == "CB")
+                            .map(|cb| (cb.x(), cb.y(), cb.z()))
+                            .unwrap_or(ca_coords)
+                    };
+
+                    let contact_residue = crate::data::contact_map::Residue {
+                        index: residue_index,
+                        amino_acid: residue.residue_type().to_string(),
+                        ca_coords,
+                        cb_coords,
+                    };
+
+                    contact_residues.push(contact_residue);
+                    residue_index += 1;
+                }
             }
         }
 
-        let contact_map = contact_generator.generate_contact_map(&all_residues);
+        let contact_map = contact_generator.generate_contact_map(&contact_residues);
         let contact_graph = Self::build_contact_graph(&contact_map)?;
         
         // Initialize chromatic optimizer
