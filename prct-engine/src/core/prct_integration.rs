@@ -155,7 +155,7 @@ impl PRCTEngine {
         phase_resonance.set_temperature(config.temperature);
         
         // Generate contact graph
-        let mut contact_generator = ContactMapGenerator::new();
+        let contact_generator = ContactMapGenerator::new();
 
         // Convert geometry::Residue to contact_map::Residue
         let mut contact_residues = Vec::new();
@@ -164,24 +164,38 @@ impl PRCTEngine {
         for chain in structure.chains() {
             for residue in chain.residues() {
                 // Extract CA coordinates (required for contact map)
-                if let Some(ca_atom) = residue.atoms().find(|atom| atom.name() == "CA") {
-                    let ca_coords = (ca_atom.x(), ca_atom.y(), ca_atom.z());
+                if let Some(ca_atom) = residue.atoms.get("CA") {
+                    let ca_coords = (ca_atom.coords.x, ca_atom.coords.y, ca_atom.coords.z);
 
                     // CB coordinates (or CA for glycine)
-                    let cb_coords = if residue.residue_type() == "GLY" {
+                    let cb_coords = if residue.amino_acid.three_letter() == "GLY" {
                         ca_coords
                     } else {
-                        residue.atoms()
-                            .find(|atom| atom.name() == "CB")
-                            .map(|cb| (cb.x(), cb.y(), cb.z()))
+                        residue.atoms.get("CB")
+                            .map(|cb| (cb.coords.x, cb.coords.y, cb.coords.z))
                             .unwrap_or(ca_coords)
                     };
 
+                    // Collect all heavy atoms (non-hydrogen)
+                    let heavy_atoms: Vec<(String, (f64, f64, f64))> = residue.atoms
+                        .iter()
+                        .filter(|(name, _atom)| !name.starts_with('H'))
+                        .map(|(name, atom)| (name.clone(), (atom.coords.x, atom.coords.y, atom.coords.z)))
+                        .collect();
+
                     let contact_residue = crate::data::contact_map::Residue {
                         index: residue_index,
-                        amino_acid: residue.residue_type().to_string(),
+                        amino_acid: residue.amino_acid.three_letter().to_string(),
                         ca_coords,
                         cb_coords,
+                        heavy_atoms,
+                        secondary_structure: match residue.secondary_structure {
+                            crate::geometry::residue::SecondaryStructure::Helix =>
+                                crate::data::contact_map::SecondaryStructure::Helix,
+                            crate::geometry::residue::SecondaryStructure::Sheet =>
+                                crate::data::contact_map::SecondaryStructure::Strand,
+                            _ => crate::data::contact_map::SecondaryStructure::Coil,
+                        },
                     };
 
                     contact_residues.push(contact_residue);
