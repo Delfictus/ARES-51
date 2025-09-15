@@ -192,7 +192,7 @@ async fn main() -> PRCTResult<()> {
     let mut total_memory_efficiency = 0.0;
     let mut benchmark_count = 0;
 
-    for (key, value) in &all_results {
+    for (_key, value) in &all_results {
         if let Some(obj) = value.as_object() {
             // Extract metrics from various benchmark result types
             let throughput = obj.get("average_gflops")
@@ -244,9 +244,9 @@ async fn main() -> PRCTResult<()> {
     let csv_file = results_dir.join("benchmark_summary.csv");
     let mut csv_content = "benchmark_type,throughput,gpu_utilization,memory_efficiency\n".to_string();
 
-    for (key, value) in &all_results {
+    for (_key, value) in &all_results {
         if let Some(obj) = value.as_object() {
-            let bench_type = key.replace("_benchmarks", "");
+            let bench_type = _key.replace("_benchmarks", "");
 
             // Extract metrics from nested benchmark results
             let throughput = obj.get("average_gflops")

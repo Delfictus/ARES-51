@@ -42,14 +42,14 @@ RUN cd prct-validation/CAPO-AI/prct-engine && \
     cargo build --release || true
 
 # Install Python packages including PyTorch for CUDA 12.1
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel 2>/dev/null && \
     pip3 install --no-cache-dir \
-    torch==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121 && \
+    torch==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121 2>/dev/null && \
     pip3 install --no-cache-dir \
     numpy==1.24.3 \
     scipy==1.11.1 \
     pandas==2.0.3 \
-    matplotlib==3.7.2
+    matplotlib==3.7.2 2>/dev/null
 
 # Set working directory
 WORKDIR /workspace/prct-validation/CAPO-AI

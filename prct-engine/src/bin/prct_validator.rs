@@ -8,7 +8,7 @@ use prct_engine::PRCTResult;
 use prct_engine::data::{CASPLoader, BlindTestProtocol};
 use prct_engine::gpu::{H100PerformanceProfiler, initialize_gpu};
 use tokio;
-use tracing::{info, warn, Level};
+use tracing::{info, Level};
 use tracing_subscriber;
 use serde_json;
 use std::time::Instant;
@@ -136,7 +136,7 @@ async fn main() -> PRCTResult<()> {
     info!("  ✅ Loaded {} targets for validation", targets.len());
 
     // Initialize blind test protocol if enabled
-    let blind_test = if enable_blind_test {
+    let _blind_test = if enable_blind_test {
         info!("🔐 Initializing blind test protocol...");
         let mut protocol = BlindTestProtocol::new_casp_protocol();
 

@@ -17,6 +17,7 @@ RESULTS_DIR="/workspace/prct-validation/results"
 CASP_DATA_DIR="/workspace/prct-validation/casp_data"
 LOG_FILE="$RESULTS_DIR/prct_blind_test.log"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+START_TIME=$(date +%s)
 
 # Create directories
 mkdir -p "$RESULTS_DIR" "$CASP_DATA_DIR" "$RESULTS_DIR/predictions" "$RESULTS_DIR/performance" "$RESULTS_DIR/logs"
@@ -58,9 +59,15 @@ fi
 # Check Python environment
 echo "" | tee -a "$LOG_FILE"
 echo "Python Environment:" | tee -a "$LOG_FILE"
-python3 -c "try: import torch; print(f'PyTorch: {torch.__version__}'); except ImportError: print('PyTorch: Not installed (using CPU fallback)')" | tee -a "$LOG_FILE"
-python3 -c "import numpy; print(f'NumPy: {numpy.__version__}')" | tee -a "$LOG_FILE"
-python3 -c "import scipy; print(f'SciPy: {scipy.__version__}')" | tee -a "$LOG_FILE"
+python3 -c "
+try:
+    import torch
+    print('PyTorch: ' + torch.__version__)
+except ImportError:
+    print('PyTorch: Not installed (using CPU fallback)')
+" | tee -a "$LOG_FILE"
+python3 -c "import numpy; print('NumPy: ' + numpy.__version__)" | tee -a "$LOG_FILE"
+python3 -c "import scipy; print('SciPy: ' + scipy.__version__)" | tee -a "$LOG_FILE"
 
 # Download CASP dataset
 echo "" | tee -a "$LOG_FILE"
@@ -312,4 +319,4 @@ fi
 
 echo "" | tee -a "$LOG_FILE"
 echo -e "${GREEN}🚀 PRCT Blind Test Complete - Ready for Local Analysis${NC}" | tee -a "$LOG_FILE"
-echo "Total execution time: $(($(date +%s) - $(date -d "$TIMESTAMP" +%s))) seconds" | tee -a "$LOG_FILE"
+echo "Total execution time: $(($(date +%s) - START_TIME)) seconds" | tee -a "$LOG_FILE"

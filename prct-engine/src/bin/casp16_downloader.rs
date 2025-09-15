@@ -55,7 +55,7 @@ async fn main() -> PRCTResult<()> {
     // Extract arguments
     let output_dir = PathBuf::from(matches.get_one::<String>("output-dir").unwrap());
     let verify_checksums = matches.get_flag("verify-checksums");
-    let force_redownload = matches.get_flag("force-redownload");
+    let _force_redownload = matches.get_flag("force-redownload");
     let specific_targets: Option<Vec<String>> = matches.get_many::<String>("targets")
         .map(|vals| vals.map(|s| s.to_string()).collect());
     
@@ -63,7 +63,7 @@ async fn main() -> PRCTResult<()> {
     info!("🔐 Verify checksums: {}", verify_checksums);
     
     // Create CASP16 loader
-    let mut loader = CASPLoader::new(output_dir.clone())?;
+    let _loader = CASPLoader::new(output_dir.clone())?;
     
     // Download targets
     match specific_targets {
