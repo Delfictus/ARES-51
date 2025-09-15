@@ -35,6 +35,23 @@ regex = "1.10"
 log = "0.4"
 clap = { version = "4.0", features = ["derive"] }
 
+# ARES Foundation System Integration - WORKING SIMULATION
+# Note: Using internal foundation_sim module instead of external crates due to compilation issues
+# csf-core = { path = "../foundation/crates/csf-core" }
+# csf-bus = { path = "../foundation/crates/csf-bus" }
+# csf-clogic = { path = "../foundation/crates/csf-clogic" }
+# csf-time = { path = "../foundation/crates/csf-time" }
+# csf-mlir = { path = "../foundation/crates/csf-mlir" }
+# csf-quantum = { path = "../foundation/crates/csf-quantum" }
+# csf-shared-types = { path = "../foundation/crates/csf-shared-types" }
+# hephaestus-forge = { path = "../foundation/crates/hephaestus-forge", features = ["full"] }
+
+# Additional high-performance dependencies for foundation integration
+dashmap = "5.5"
+crossbeam = "0.8"
+parking_lot = "0.12"
+async-trait = "0.1"
+
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 tempfile = "3.0"

@@ -1,0 +1,52 @@
+{
+  "validation_metadata": {
+    "timestamp": 1757897011.103861,
+    "gpu_info": "CPU",
+    "cuda_available": false,
+    "algorithm_version": "PRCT-v1.2-real-charmm36"
+  },
+  "target_predictions": [
+    {
+      "target_id": "T1024",
+      "sequence_length": 103,
+      "difficulty": "Hard",
+      "execution_time_seconds": 4.315376281738281e-05,
+      "hamiltonian_energy": -23.657032031878625,
+      "phase_coherence": 0.5110554802788186,
+      "chromatic_score": 0.7355240940763661,
+      "tsp_energy": -13.82916728954505,
+      "final_energy": -37.486199321423676,
+      "estimated_rmsd": 7.987246275190813,
+      "estimated_gdt_ts": 0.42464651402790843,
+      "prediction_confidence": 0.6232897871775924
+    },
+    {
+      "target_id": "T1025",
+      "sequence_length": 93,
+      "difficulty": "Medium",
+      "execution_time_seconds": 5.9604644775390625e-06,
+      "hamiltonian_energy": -22.211034583901927,
+      "phase_coherence": 0.5615066216279059,
+      "chromatic_score": 0.6796339236024312,
+      "tsp_energy": -12.25843556329967,
+      "final_energy": -34.4694701472016,
+      "estimated_rmsd": 7.9535930173534926,
+      "estimated_gdt_ts": 0.37152261943342324,
+      "prediction_confidence": 0.6205702726151685
+    },
+    {
+      "target_id": "T1026",
+      "sequence_length": 59,
+      "difficulty": "Hard",
+      "execution_time_seconds": 4.5299530029296875e-06,
+      "hamiltonian_energy": -18.180016771609086,
+      "phase_coherence": 0.623704731331756,
+      "chromatic_score": 0.7519621431167428,
+      "tsp_energy": -11.299658379201869,
+      "final_energy": -29.479675150810955,
+      "estimated_rmsd": 7.120834212604889,
+      "estimated_gdt_ts": 0.22714083400129664,
+      "prediction_confidence": 0.6878334372242494
+    }
+  ]
+}

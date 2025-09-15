@@ -65,7 +65,14 @@
       "Bash(podman tag:*)",
       "Bash(podman push:*)",
       "Bash(export CARGO_TARGET_DIR=/tmp/prct-build)",
-      "Bash(export CARGO_TARGET_DIR=/tmp/prct-target)"
+      "Bash(export CARGO_TARGET_DIR=/tmp/prct-target)",
+      "Bash(CARGO_TARGET_DIR=/tmp/prct-build cargo check --lib --quiet)",
+      "Bash(timeout 30s cargo run --bin prct-validator -- --casp16-data test_casp_dir --results-dir test_results --generate-pdb --targets T1024,T1025,T1026 --gpu-count 1)",
+      "Bash(/tmp/capo-build/debug/prct-validator:*)",
+      "Bash(timeout 30s cargo run --bin prct-validator -- --casp16-data test_casp_dir --results-dir test_results --targets T1024,T1025,T1026 --gpu-count 1)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo check --lib --quiet --message-format=short)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test --lib --quiet)",
+      "Bash(CARGO_TARGET_DIR=/tmp/capo-build cargo test --lib --jobs 1 --quiet)"
     ],
     "deny": [],
     "ask": []

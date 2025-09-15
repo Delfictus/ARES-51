@@ -34,6 +34,9 @@ pub mod optimization;
 pub mod validation;
 pub mod security;
 pub mod gpu; // H100 PCIe GPU acceleration module
+pub mod structure; // 3D structure generation from PRCT algorithm
+pub mod foundation_sim; // Foundation system simulation - working implementations
+pub mod foundation_integration; // Foundation system integration - REAL algorithms
 
 // Legacy modules (to be refactored) - COMMENTED OUT FOR INITIAL BUILD
 // pub mod dataset_downloader;
@@ -68,6 +71,9 @@ pub enum PRCTError {
     
     #[error("Performance benchmark failed: {0}")]
     BenchmarkFailure(String),
+
+    #[error("Foundation system integration failed: {0}")]
+    FoundationIntegration(String),
     
     #[error("Hamiltonian construction failed: {0}")]
     HamiltonianError(String),
@@ -119,6 +125,9 @@ pub enum PRCTError {
     
     #[error("CASP loader error: {0}")]
     CASPLoader(#[from] crate::data::CASPLoaderError),
+
+    #[error("Structure generation failed: {0}")]
+    StructureGeneration(String),
 
     #[error("General error: {0}")]
     General(#[from] anyhow::Error),
