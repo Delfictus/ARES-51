@@ -1,0 +1,85 @@
+[package]
+name = "ares-neuromorphic-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ididia Serfaty <ididiaserfaty@protonmail.com>"]
+description = "Core neuromorphic prediction engine for ARES trading system"
+license = "MIT"
+repository = "https://github.com/ares-systems/ares-neuromorphic-core"
+homepage = "https://github.com/ares-systems/ares-neuromorphic-core"
+documentation = "https://docs.rs/ares-neuromorphic-core"
+keywords = ["neuromorphic", "trading", "machine-learning", "spiking-neural-networks", "finance"]
+categories = ["algorithms", "mathematics", "science"]
+readme = "README.md"
+
+[lib]
+name = "ares_neuromorphic_core"
+crate-type = ["lib"]
+
+[dependencies]
+# Core math and computation
+ndarray = { version = "0.16", features = ["rayon"] }
+nalgebra = "0.33"
+num-complex = "0.4"
+num-traits = "0.2"
+
+# Async and concurrency
+tokio = { version = "1.41", features = ["rt", "rt-multi-thread", "time", "sync"], optional = true }
+rayon = "1.10"
+crossbeam = "0.8"
+parking_lot = "0.12"
+
+# Data structures
+ringbuffer = "0.15"
+dashmap = "6.1"
+ahash = "0.8"
+smallvec = "1.13"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Randomness and distributions
+rand = "0.8"
+rand_distr = "0.4"
+rand_xoshiro = "0.6"
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Memory management
+aligned-vec = "0.5"
+once_cell = "1.20"
+
+# Additional data structures
+ordered-float = "4.2"
+
+[features]
+default = ["async", "std"]
+std = []
+async = ["tokio"]
+brian2 = []
+cuda = []
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.5"
+approx = "0.5"
+tokio-test = "0.4"
+
+# Benchmarks will be added later
+# [[bench]]
+# name = "spike_processing"
+# harness = false
+
+# [[bench]]
+# name = "reservoir_computing"
+# harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

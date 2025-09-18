@@ -1,0 +1,131 @@
+[package]
+name = "ares-csf-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "ChronoSynclastic Fabric (CSF) Core - High-performance distributed computation fabric for quantum-temporal processing"
+readme = "README.md"
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+keywords = ["quantum", "temporal", "computation", "distributed", "high-performance"]
+categories = ["science", "algorithms", "mathematics", "concurrency", "no-std"]
+
+[features]
+default = ["std", "tensor-ops", "streaming"]
+std = []
+no-std = []
+
+# High-performance computing features
+tensor-ops = ["nalgebra", "ndarray", "num-traits", "num-complex"]
+hpc = ["cudarc", "wgpu", "wide", "simba"]
+gpu = ["cudarc", "wgpu"]
+cuda = ["cudarc", "gpu"]
+simd = ["wide", "simba"]
+streaming = ["crossbeam-channel", "flume"]
+
+# Enterprise and quantum features
+quantum = ["lapack", "blas", "lapack-src"]
+enterprise = ["reqwest", "futures"]
+profiling = ["pprof", "tracy-client"]
+
+# Testing and development
+testing = ["proptest", "proptest-derive"]
+
+[dependencies]
+# Protocol and shared types (use local shared types for now)
+# csf-protocol = { version = "0.1", path = "../csf-protocol", optional = true }
+# csf-shared-types = { version = "0.1", path = "../csf-shared-types" }
+# csf-time = { version = "0.1", path = "../csf-time" }
+
+# Core async and error handling
+async-trait.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+bincode = "1.3.3"
+bytes.workspace = true
+
+# Async runtime
+tokio.workspace = true
+futures = { version = "0.3", optional = true }
+
+# High-performance tensor operations (optional)
+nalgebra = { workspace = true, optional = true }
+ndarray = { workspace = true, optional = true }
+num-traits = { workspace = true, optional = true }
+num-complex = { workspace = true, optional = true }
+
+# LAPACK/BLAS bindings for quantum operations (optional)
+lapack = { version = "0.19", optional = true }
+blas = { version = "0.22", optional = true }
+lapack-src = { version = "0.10", features = ["openblas"], optional = true }
+
+# High-performance parallel computing (optional)
+# rayon = { workspace = true, optional = true }
+crossbeam-channel = { workspace = true, optional = true }
+flume = { workspace = true, optional = true }
+
+# GPU acceleration (optional)
+cudarc = { version = "0.11", optional = true }
+wgpu = { version = "0.19", optional = true }
+
+# SIMD acceleration (optional)
+wide = { version = "0.7", optional = true }
+simba = { version = "0.8", optional = true }
+
+# Memory optimization (optional)
+memmap2 = { version = "0.9", optional = true }
+bytemuck = { version = "1.14", features = ["derive"], optional = true }
+
+# Compression for streaming (optional)
+lz4 = { version = "1.24", optional = true }
+zstd = { version = "0.13", optional = true }
+
+# HTTP client for computational data fetching (optional)
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], optional = true }
+
+# System information
+num_cpus.workspace = true
+sysinfo.workspace = true
+
+# Utilities
+uuid.workspace = true
+chrono.workspace = true
+rand.workspace = true
+itertools = "0.12"
+tracing.workspace = true
+
+# Property-based testing (optional)
+proptest = { workspace = true, optional = true }
+proptest-derive = { version = "0.4.0", optional = true }
+
+# Profiling (optional)
+pprof = { version = "0.13", features = ["flamegraph"], optional = true }
+tracy-client = { version = "0.17", optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+criterion.workspace = true
+proptest.workspace = true
+proptest-derive = "0.4.0"
+
+# Benchmarks will be added in future versions
+# [[bench]]
+# name = "tensor_benchmarks"
+# harness = false
+# required-features = ["tensor-ops"]
+
+# [[bench]]
+# name = "quantum_benchmarks"
+# harness = false
+# required-features = ["quantum"]
+
+# [[bench]]
+# name = "hpc_benchmarks"
+# harness = false
+# required-features = ["hpc"]

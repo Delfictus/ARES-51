@@ -1,0 +1,76 @@
+[package]
+name = "ares-spike-encoding"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ididia Serfaty <ididiaserfaty@protonmail.com>"]
+description = "Neuromorphic spike encoding algorithms for converting market data to neural spike trains"
+license = "MIT"
+repository = "https://github.com/ares-systems/ares-spike-encoding"
+homepage = "https://github.com/ares-systems/ares-spike-encoding"
+documentation = "https://docs.rs/ares-spike-encoding"
+keywords = ["neuromorphic", "spike-encoding", "neural-networks", "finance", "spiking"]
+categories = ["algorithms", "mathematics", "science"]
+readme = "README.md"
+
+[lib]
+name = "ares_spike_encoding"
+crate-type = ["lib"]
+
+[dependencies]
+# Core math and computation
+ndarray = { version = "0.16", features = ["rayon"], optional = true }
+num-traits = "0.2"
+
+# Randomness and distributions
+rand = "0.8"
+rand_distr = "0.4"
+rand_xoshiro = "0.6"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Data structures
+smallvec = "1.13"
+ahash = "0.8"
+
+# Additional data structures
+ordered-float = "4.2"
+
+# Memory management
+aligned-vec = { version = "0.5", optional = true }
+
+# Fast math operations
+libm = "0.2"
+
+[features]
+default = ["std", "ndarray-support"]
+std = []
+ndarray-support = ["ndarray", "aligned-vec"]
+simd = []
+brian2 = []
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.5"
+approx = "0.5"
+
+# Benchmarks will be added later
+# [[bench]]
+# name = "encoding_performance"
+# harness = false
+
+# [[bench]]
+# name = "encoding_methods"
+# harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

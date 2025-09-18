@@ -1,0 +1,30 @@
+# ARES Personal Registry Configuration
+[registries]
+ares = { index = "https://github.com/delfictus/ares-registry.git" }
+
+[source.ares]
+registry = "https://github.com/delfictus/ares-registry.git"
+
+# Build optimizations for ARES crates
+[build]
+rustflags = ["-C", "target-cpu=native"]
+
+# Profile configurations
+[profile.dev]
+opt-level = 0
+debug = true
+overflow-checks = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.bench]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1

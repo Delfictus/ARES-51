@@ -1,58 +1,24 @@
 # Rust build artifacts
-/target/
+target/
 Cargo.lock
 
-# IDE files
+# IDE and editor files  
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS files
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-
-# Environment files
-.env
-.env.local
+# Published crate files (keep source, not binaries)
+*.crate
 
 # Temporary files
 *.tmp
 *.temp
 
-# Python cache (if using Python bridge)
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Node modules (if using JavaScript/TypeScript)
-node_modules/
-
-# Build outputs
-/artifacts/
-/build/
-/dist/
-
-# Security sensitive files
-*.key
-*.pem
-*.cert
-
-# Large data files
-*.db
-*.sqlite
-*.parquet
-data/
-
-# TOP SECRET - No sensitive data in git
-/secrets/
-/private/
-/classified/
-
-# Performance benchmarks output
-/bench_results/
-*.profdata
+# Log files
+*.log
