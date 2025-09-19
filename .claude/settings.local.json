@@ -77,6 +77,8 @@
       "Read(/mnt/m/Projects/ares-registry/**)",
       "Read(/mnt/m/Projects/ares-registry/**)",
       "Bash(export CARGO_BUILD_JOBS=1)",
+      "Read(/mnt/m/Projects/neuromorphic-paper-trader/**)",
+      "Read(/tmp/ares-git-test/**)",
       "Read(/mnt/m/Projects/neuromorphic-paper-trader/**)"
     ],
     "deny": [],
